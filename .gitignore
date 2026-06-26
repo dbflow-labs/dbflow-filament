@@ -1,0 +1,17 @@
+/vendor/
+/node_modules/
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.idea/
+.vscode/
+.env
+.env.*
+
+/lang/zh_CN/
+
+docs/
+
+.DS_Store
+Thumbs.db
+*.log
