@@ -1,11 +1,11 @@
 # DBFlow Filament
 
-[Latest Version on Packagist](https://packagist.org/packages/dbflowlabs/filament)
-[Total Downloads](https://packagist.org/packages/dbflowlabs/filament)
-[License: MIT](LICENSE)
-[PHP](composer.json)
-[Laravel](composer.json)
-[Filament](composer.json)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/dbflowlabs/filament.svg)](https://packagist.org/packages/dbflowlabs/filament)
+[![Total Downloads](https://img.shields.io/packagist/dt/dbflowlabs/filament.svg)](https://packagist.org/packages/dbflowlabs/filament)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/php-8.3%2B-777bb4.svg)](composer.json)
+[![Laravel](https://img.shields.io/badge/laravel-13.x-ff2d20.svg)](composer.json)
+[![Filament](https://img.shields.io/badge/filament-5.x-f59e0b.svg)](composer.json)
 
 **Standard Filament integration for DBFlow Core.**
 
