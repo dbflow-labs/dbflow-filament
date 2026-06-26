@@ -23,7 +23,7 @@ This package is the **standard UI layer** for `dbflowlabs/core`. It intentionall
 | First release   | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
-| Core dependency | `[dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core)` `^0.1.0-alpha.1` |
+| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.1.0-alpha.1` |
 | Filament        | `^5.6`                                                                               |
 | PHP             | `^8.3`                                                                               |
 | Host framework  | Laravel 13.x                                                                         |
@@ -50,7 +50,7 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 - PHP `^8.3`
 - Laravel 13.x
 - Filament `^5.6`
-- `[dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core)` `^0.1.0-alpha.1`
+- [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.1.0-alpha.1`
 - Core database migrations applied before using the workflow UI
 
 
@@ -103,7 +103,7 @@ php artisan vendor:publish --tag=dbflow-filament-translations
 
 ### Run Core migrations
 
-Follow the `[dbflowlabs/core](https://github.com/dbflow-labs/dbflow-core)` installation guide, then run migrations:
+Follow the [dbflowlabs/core](https://github.com/dbflow-labs/dbflow-core) installation guide, then run migrations:
 
 ```bash
 php artisan migrate
