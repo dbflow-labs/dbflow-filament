@@ -45,7 +45,7 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 | First release   | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
-| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.1.0-alpha.1` |
+| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.2.0-alpha.1` |
 | Filament        | `^5.6`                                                                               |
 | PHP             | `^8.3`                                                                               |
 | Host framework  | Laravel 13.x                                                                         |
@@ -67,7 +67,7 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 - PHP `^8.3`
 - Laravel 13.x
 - Filament `^5.6`
-- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^0.1.0-alpha.1`
+- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^0.2.0-alpha.1`
 - Core database migrations applied (`php artisan migrate`)
 - Host user model configured in Core (`DBFLOW_AUTH_MODEL`, see [Core prerequisites](#core-prerequisites))
 
@@ -78,7 +78,7 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 If your application uses `minimum-stability: stable` (the Laravel default), pin alpha packages with an explicit stability flag:
 
 ```bash
-composer require "dbflowlabs/filament:0.1.0-alpha.1@alpha" "dbflowlabs/core:^0.1.0-alpha.1@alpha"
+composer require "dbflowlabs/filament:0.1.0-alpha.1@alpha" "dbflowlabs/core:^0.2.0-alpha.1@alpha"
 ```
 
 If your project already allows alpha/dev stability, you may use:
@@ -98,7 +98,7 @@ composer require "dbflowlabs/filament:^0.1.0-alpha.1@alpha"
 To pin Core explicitly:
 
 ```bash
-composer require "dbflowlabs/core:0.1.0-alpha.1@alpha"
+composer require "dbflowlabs/core:0.2.0-alpha.1@alpha"
 ```
 
 After installation, confirm that `composer.lock` records the expected alpha version and resolved commit hash.
@@ -158,7 +158,7 @@ See the [dbflowlabs/core README](https://github.com/dbflow-labs/dbflow-core/blob
 
 | Config file | Primary switch | What it controls |
 | ----------- | -------------- | ---------------- |
-| `config/dbflow.php` | `enabled` | Core runtime (service provider still boots during alpha; see Core README) |
+| `config/dbflow.php` | `enabled` | Core runtime (`DBFLOW_ENABLED=false` skips bindings, migrations, and runtime actions) |
 | `config/dbflow-filament.php` | `enabled` | Whether Filament pages/resources are exposed when registered |
 
 `DBFlowFilamentPanel` checks **`dbflow-filament.enabled`** and **`panel_registration_mode`**. It does **not** read `dbflow.enabled`. Hosts that want a single feature flag should wrap both configs in their own toggle.
