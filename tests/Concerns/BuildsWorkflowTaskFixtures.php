@@ -109,7 +109,15 @@ trait BuildsWorkflowTaskFixtures
 
     protected function ensureUserExists(int|string $userId): void
     {
-        if (Schema::hasTable('users') && ! DB::table('users')->where('id', $userId)->exists()) {
+        if (! Schema::hasTable('users')) {
+            return;
+        }
+
+        if (! is_int($userId) && ! is_numeric($userId)) {
+            return;
+        }
+
+        if (! DB::table('users')->where('id', $userId)->exists()) {
             DB::table('users')->insert([
                 'id' => $userId,
                 'name' => 'Test User '.$userId,

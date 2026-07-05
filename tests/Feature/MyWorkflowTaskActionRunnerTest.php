@@ -96,6 +96,23 @@ final class MyWorkflowTaskActionRunnerTest extends TestCase
     }
 
     #[Test]
+    public function can_act_on_assignment_matches_string_uuid_assignee_ids(): void
+    {
+        $uuid = '550e8400-e29b-41d4-a716-446655440000';
+        $assignment = $this->createPendingAssignmentForUserId(assigneeUserId: $uuid);
+        $user = new TestAuthenticatableUser($uuid);
+        $otherUser = new TestAuthenticatableUser('550e8400-e29b-41d4-a716-446655440001');
+
+        $this->assertTrue(MyWorkflowTaskActionRunner::canActOnAssignment($assignment, $user));
+        $this->assertFalse(MyWorkflowTaskActionRunner::canActOnAssignment($assignment, $otherUser));
+
+        $result = app(MyWorkflowTaskActionRunner::class)->approve($assignment, $user, 'Approved with UUID assignee');
+
+        $this->assertTrue($result->successful);
+        $this->assertSame(WorkflowTaskAssignmentStatus::Approved, $assignment->fresh()?->status);
+    }
+
+    #[Test]
     public function runner_source_has_no_host_namespace_imports(): void
     {
         $source = (string) file_get_contents(

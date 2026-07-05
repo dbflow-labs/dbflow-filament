@@ -89,7 +89,7 @@ final class MyWorkflowTaskActionRunner
             return false;
         }
 
-        if ((int) $assignment->assignee_user_id !== (int) $user->getKey()) {
+        if ((string) $assignment->assignee_user_id !== (string) $user->getKey()) {
             return false;
         }
 

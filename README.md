@@ -45,7 +45,7 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 | First release   | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
-| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.2.0-alpha.1` |
+| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^0.3.0-alpha.1` |
 | Filament        | `^5.6`                                                                               |
 | PHP             | `^8.3`                                                                               |
 | Host framework  | Laravel 13.x                                                                         |
@@ -67,7 +67,7 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 - PHP `^8.3`
 - Laravel 13.x
 - Filament `^5.6`
-- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^0.2.0-alpha.1`
+- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^0.3.0-alpha.1`
 - Core database migrations applied (`php artisan migrate`)
 - Host user model configured in Core (`DBFLOW_AUTH_MODEL`, see [Core prerequisites](#core-prerequisites))
 
@@ -78,7 +78,7 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 If your application uses `minimum-stability: stable` (the Laravel default), pin alpha packages with an explicit stability flag:
 
 ```bash
-composer require "dbflowlabs/filament:0.1.0-alpha.1@alpha" "dbflowlabs/core:^0.2.0-alpha.1@alpha"
+composer require "dbflowlabs/filament:0.1.0-alpha.1@alpha" "dbflowlabs/core:^0.3.0-alpha.1@alpha"
 ```
 
 If your project already allows alpha/dev stability, you may use:
@@ -98,7 +98,7 @@ composer require "dbflowlabs/filament:^0.1.0-alpha.1@alpha"
 To pin Core explicitly:
 
 ```bash
-composer require "dbflowlabs/core:0.2.0-alpha.1@alpha"
+composer require "dbflowlabs/core:0.3.0-alpha.1@alpha"
 ```
 
 After installation, confirm that `composer.lock` records the expected alpha version and resolved commit hash.
@@ -150,7 +150,10 @@ Set the host user model explicitly in `.env`:
 ```env
 DBFLOW_AUTH_MODEL=App\Models\User
 DBFLOW_AUTH_GUARD=web
+DBFLOW_AUTH_TABLE=users
 ```
+
+Core stores workflow user references (`assignee_user_id`, `started_by_user_id`, `actor_user_id`) as strings. Integer primary keys still work (stored as `"1"`); UUID/ULID primary keys are supported in Core 0.3+.
 
 See the [dbflowlabs/core README](https://github.com/dbflow-labs/dbflow-core/blob/main/README.md) for `binding_mode`, hooks, and runtime APIs.
 
@@ -171,13 +174,20 @@ Filament does not seed workflows. For code-first definitions:
 2. Register any `AssigneeResolver` keys referenced by approval nodes.
 3. Sync definitions into the database:
 
+```bash
+php artisan dbflow:sync
+php artisan dbflow:validate --strict
+```
+
+Or programmatically:
+
 ```php
 use DbflowLabs\Core\Actions\SyncWorkflowDefinitions;
 
 app(SyncWorkflowDefinitions::class)->handle();
 ```
 
-There is **no** bundled Artisan command; hosts may wrap `handle()` in their own command or call it during boot.
+Core ships official `dbflow:sync` (`--dry-run`, `--workflow=`) and `dbflow:validate` (`--strict`, `--workflow=`, `--source=`) commands. Filament does not bundle its own sync command.
 
 > [!NOTE]
 > **Code sync vs UI-authored definitions:** When a workflow is owned by the Filament definition resource (`source = ui`), code sync stores new versions as history but does not replace the UI workflow's active version pointer. Hosts using code-first pilots often disable `enable_workflow_definition_resource` or treat the resource as read-only ops tooling. See [docs/workflow-definitions.md](docs/workflow-definitions.md).
@@ -544,7 +554,6 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 - Billing, licensing, or premium feature gating
 - Host domain models or product-specific adapters
 - Automatic Filament panel mutation
-- Bundled Artisan sync command for code-first definitions
 - Production SLA
 
 Visual authoring belongs to the separate commercial `dbflowlabs/filament-pro` package.

@@ -315,9 +315,6 @@ final class StandardWorkflowDefinitionEditor
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.assignee_value'))
                     ->required()
                     ->maxLength(255)
-                    ->numeric(fn (Get $get): bool => $get('assignee_type') === WorkflowDefinitionSchema::ASSIGNEE_TYPE_USER)
-                    ->integer(fn (Get $get): bool => $get('assignee_type') === WorkflowDefinitionSchema::ASSIGNEE_TYPE_USER)
-                    ->minValue(fn (Get $get): ?int => $get('assignee_type') === WorkflowDefinitionSchema::ASSIGNEE_TYPE_USER ? 1 : null)
                     ->helperText(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.assignee_value_helper')),
             ];
         }

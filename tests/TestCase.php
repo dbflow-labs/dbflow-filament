@@ -36,5 +36,8 @@ abstract class TestCase extends OrchestraTestCase
         ]);
 
         $app['config']->set('app.locale', 'en');
+
+        $app['config']->set('dbflow.auth.model', \DbflowLabs\Filament\Tests\Models\TestUser::class);
+        $app['config']->set('dbflow.auth.table', 'users');
     }
 }

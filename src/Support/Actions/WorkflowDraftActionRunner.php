@@ -60,7 +60,7 @@ final class WorkflowDraftActionRunner
         );
     }
 
-    public function publishDraft(Workflow $workflow, ?int $publishedBy = null): WorkflowDefinitionActionResult
+    public function publishDraft(Workflow $workflow, int|string|null $publishedBy = null): WorkflowDefinitionActionResult
     {
         if (! $workflow->hasDraft()) {
             return WorkflowDefinitionActionResult::danger(
