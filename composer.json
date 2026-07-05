@@ -48,22 +48,5 @@
   "prefer-stable": true,
   "config": {
     "sort-packages": true
-  },
-  "repositories": [
-    {
-      "name": "dbflow-core",
-      "type": "path",
-      "url": "../dbflow-core",
-      "options": {
-        "versions": {
-          "dbflowlabs/core": "0.3.0-alpha.1"
-        }
-      }
-    },
-    {
-      "name": "packagist",
-      "type": "composer",
-      "url": "https://repo.packagist.org"
-    }
-  ]
+  }
 }

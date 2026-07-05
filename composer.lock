@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "468cf2b373371e47d22202f55b840288",
+    "content-hash": "6d5f211f2856aa7c39f04daf397c383c",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -554,10 +554,16 @@
         {
             "name": "dbflowlabs/core",
             "version": "0.3.0-alpha.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dbflow-labs/dbflow-core.git",
+                "reference": "675385fa1a164067bdbfe54b7393e1e2efa7dc67"
+            },
             "dist": {
-                "type": "path",
-                "url": "../dbflow-core",
-                "reference": "bec93694bc21b9f196633480d5ad45949b78c2a8"
+                "type": "zip",
+                "url": "https://api.github.com/repos/dbflow-labs/dbflow-core/zipball/675385fa1a164067bdbfe54b7393e1e2efa7dc67",
+                "reference": "675385fa1a164067bdbfe54b7393e1e2efa7dc67",
+                "shasum": ""
             },
             "require": {
                 "illuminate/auth": "^13.0",
@@ -587,19 +593,7 @@
                     "DbflowLabs\\Core\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "DbflowLabs\\Core\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "phpstan": [
-                    "vendor/bin/phpstan analyse --memory-limit=512M"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -615,9 +609,7 @@
                 "issues": "https://github.com/dbflow-labs/dbflow-core/issues",
                 "source": "https://github.com/dbflow-labs/dbflow-core"
             },
-            "transport-options": {
-                "relative": true
-            }
+            "time": "2026-07-05T17:16:00+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
