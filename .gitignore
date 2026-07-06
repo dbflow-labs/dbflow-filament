@@ -5,6 +5,7 @@
 .php-cs-fixer.cache
 .idea/
 .vscode/
+.cursor/
 .env
 .env.*
 
