@@ -5,12 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-rc.1] - 2026-07-07
+## [1.0.0-rc.2] - 2026-07-07
 
 ### Added
 
 - Standard workflow editor: optional approval `timeout.due_in` and `timeout.on_timeout` fields (aligned with Core `0.5.0-alpha.1`).
 - Timeline labels for `task_reassigned` and `task_timed_out` audit events.
+
+### Upgrade notes
+
+- Pin `dbflowlabs/filament:1.0.0-rc.2` with `dbflowlabs/core:1.0.0-rc.1`.
+- Schedule `php artisan dbflow:process-timeouts` when authors configure approval deadlines in the definition editor.
+
+## [1.0.0-rc.1] - 2026-07-07
 
 ### Changed
 

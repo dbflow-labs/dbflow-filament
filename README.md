@@ -78,13 +78,13 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 If your application uses `minimum-stability: stable` (the Laravel default), pin RC packages with an explicit stability flag:
 
 ```bash
-composer require "dbflowlabs/filament:1.0.0-rc.1@RC" "dbflowlabs/core:1.0.0-rc.1@RC"
+composer require "dbflowlabs/filament:1.0.0-rc.2@RC" "dbflowlabs/core:1.0.0-rc.1@RC"
 ```
 
 If your project already allows prerelease stability, you may use:
 
 ```bash
-composer require "dbflowlabs/filament:1.0.0-rc.1"
+composer require "dbflowlabs/filament:1.0.0-rc.2"
 ```
 
 `dbflowlabs/core` is installed automatically as a dependency of this package.
@@ -92,7 +92,7 @@ composer require "dbflowlabs/filament:1.0.0-rc.1"
 For ongoing RC updates after the first pin:
 
 ```bash
-composer require "dbflowlabs/filament:^1.0.0-rc.1@RC"
+composer require "dbflowlabs/filament:^1.0.0-rc.2@RC"
 ```
 
 To pin Core explicitly:
@@ -186,6 +186,8 @@ use DbflowLabs\Core\Actions\SyncWorkflowDefinitions;
 
 app(SyncWorkflowDefinitions::class)->handle();
 ```
+
+When using the **UI definition editor**, approval steps may optionally set `timeout.due_in` (ISO 8601 duration) and `on_timeout` (`reject_end` for auto-reject). Schedule `php artisan dbflow:process-timeouts` when using deadlines (see Core README).
 
 Core ships official `dbflow:sync` (`--dry-run`, `--workflow=`) and `dbflow:validate` (`--strict`, `--workflow=`, `--source=`) commands. Filament does not bundle its own sync command.
 
@@ -534,7 +536,7 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 
 ## Release candidate scope
 
-`1.0.0-rc.1` pairs with Core `1.0.0-rc.1` under the frozen integration contract. Pin exact RC tags until stable `1.0.0`.
+`1.0.0-rc.2` pairs with Core `1.0.0-rc.1` under the frozen integration contract. Pin exact RC tags until stable `1.0.0`.
 
 ### Included
 
@@ -544,7 +546,7 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 - Workflow Instances page
 - Workflow Instance Detail page
 - Workflow Definition resource
-- Standard form-based workflow definition editor
+- Standard form-based workflow definition editor (optional approval `timeout.due_in` / `on_timeout` from `1.0.0-rc.2`)
 - Extension contracts for auth, labels, users, assignee options, and presentation
 - Integration with Core definitions, versions, instances, tasks, assignments, and logs
 
