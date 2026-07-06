@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.1] - 2026-07-07
 
+### Added
+
+- Standard workflow editor: optional approval `timeout.due_in` and `timeout.on_timeout` fields (aligned with Core `0.5.0-alpha.1`).
+- Timeline labels for `task_reassigned` and `task_timed_out` audit events.
+
 ### Changed
 
 - Requires `dbflowlabs/core` `^1.0.0-rc.1` (aligned with Core API freeze RC).

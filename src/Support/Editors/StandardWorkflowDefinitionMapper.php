@@ -517,6 +517,7 @@ final class StandardWorkflowDefinitionMapper
                 'assignee_type' => (string) ($assignees[WorkflowDefinitionSchema::ASSIGNEE_FIELD_TYPE] ?? WorkflowDefinitionSchema::ASSIGNEE_TYPE_USER),
                 'assignee_value' => (string) ($assignees[WorkflowDefinitionSchema::ASSIGNEE_FIELD_VALUE] ?? ''),
                 'approval_mode' => (string) ($config[WorkflowDefinitionSchema::CONFIG_APPROVAL_MODE] ?? WorkflowDefinitionSchema::APPROVAL_MODE_ANY),
+                ...self::parseTimeoutFormFields($config),
             ],
         ];
     }
@@ -844,13 +845,71 @@ final class StandardWorkflowDefinitionMapper
             $approvalMode = WorkflowDefinitionSchema::APPROVAL_MODE_ANY;
         }
 
-        return [
+        $config = [
             WorkflowDefinitionSchema::CONFIG_APPROVAL_MODE => $approvalMode,
             WorkflowDefinitionSchema::CONFIG_ASSIGNEES => [
                 WorkflowDefinitionSchema::ASSIGNEE_FIELD_TYPE => $assigneeType,
                 WorkflowDefinitionSchema::ASSIGNEE_FIELD_VALUE => trim((string) ($data['assignee_value'] ?? '')),
             ],
         ];
+
+        $timeout = self::buildTimeoutConfig($data);
+
+        if ($timeout !== []) {
+            $config[WorkflowDefinitionSchema::CONFIG_TIMEOUT] = $timeout;
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{timeout_due_in: string, timeout_on_timeout: string}
+     */
+    private static function parseTimeoutFormFields(array $config): array
+    {
+        $timeout = $config[WorkflowDefinitionSchema::CONFIG_TIMEOUT] ?? null;
+
+        if (! is_array($timeout) || $timeout === []) {
+            return [
+                'timeout_due_in' => '',
+                'timeout_on_timeout' => '',
+            ];
+        }
+
+        return [
+            'timeout_due_in' => is_string($timeout[WorkflowDefinitionSchema::TIMEOUT_DUE_IN] ?? null)
+                ? $timeout[WorkflowDefinitionSchema::TIMEOUT_DUE_IN]
+                : '',
+            'timeout_on_timeout' => is_string($timeout[WorkflowDefinitionSchema::TIMEOUT_ON_TIMEOUT] ?? null)
+                ? $timeout[WorkflowDefinitionSchema::TIMEOUT_ON_TIMEOUT]
+                : '',
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, string>
+     */
+    private static function buildTimeoutConfig(array $data): array
+    {
+        $dueIn = trim((string) ($data['timeout_due_in'] ?? ''));
+
+        if ($dueIn === '') {
+            return [];
+        }
+
+        $timeout = [
+            WorkflowDefinitionSchema::TIMEOUT_DUE_IN => $dueIn,
+        ];
+
+        $onTimeout = trim((string) ($data['timeout_on_timeout'] ?? ''));
+
+        if ($onTimeout !== '') {
+            $timeout[WorkflowDefinitionSchema::TIMEOUT_ON_TIMEOUT] = $onTimeout;
+        }
+
+        return $timeout;
     }
 
     /**

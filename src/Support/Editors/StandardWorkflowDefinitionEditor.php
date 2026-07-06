@@ -196,6 +196,19 @@ final class StandardWorkflowDefinitionEditor
                     ->default(WorkflowDefinitionSchema::APPROVAL_MODE_ANY)
                     ->native(false)
                     ->helperText(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.approval_mode_helper')),
+                TextInput::make('timeout_due_in')
+                    ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_due_in'))
+                    ->placeholder('P1D')
+                    ->maxLength(32)
+                    ->helperText(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_due_in_helper'))
+                    ->columnSpanFull(),
+                Select::make('timeout_on_timeout')
+                    ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_on_timeout'))
+                    ->options(fn (): array => self::timeoutOnTimeoutOptions())
+                    ->placeholder(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_on_timeout_audit_only'))
+                    ->native(false)
+                    ->helperText(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_on_timeout_helper'))
+                    ->columnSpanFull(),
             ])
             ->columns(2);
     }
@@ -476,6 +489,16 @@ final class StandardWorkflowDefinitionEditor
             WorkflowDefinitionSchema::APPROVAL_MODE_ANY => __('dbflow-filament::dbflow-filament.forms.workflow_definitions.approval_modes.any'),
             WorkflowDefinitionSchema::APPROVAL_MODE_ALL => __('dbflow-filament::dbflow-filament.forms.workflow_definitions.approval_modes.all'),
             WorkflowDefinitionSchema::APPROVAL_MODE_SEQUENTIAL => __('dbflow-filament::dbflow-filament.forms.workflow_definitions.approval_modes.sequential'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function timeoutOnTimeoutOptions(): array
+    {
+        return [
+            'reject_end' => __('dbflow-filament::dbflow-filament.forms.workflow_definitions.timeout_on_timeout_options.reject_end'),
         ];
     }
 

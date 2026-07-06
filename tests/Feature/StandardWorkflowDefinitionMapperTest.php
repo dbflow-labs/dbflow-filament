@@ -348,4 +348,51 @@ final class StandardWorkflowDefinitionMapperTest extends TestCase
             $definition['nodes'][1]['metadata']['standard_editor']['grid'] ?? null,
         );
     }
+
+    #[Test]
+    public function it_round_trips_approval_timeout_configuration_without_data_loss(): void
+    {
+        $workflow = $this->createWorkflowDraft('timeout_builder', 'Timeout Builder');
+
+        $definition = StandardWorkflowDefinitionMapper::buildDefinition($workflow, [
+            [
+                'type' => StandardWorkflowStepTypes::APPROVAL,
+                'data' => [
+                    'step_label' => 'Timed Review',
+                    'assignee_type' => 'user',
+                    'assignee_value' => '42',
+                    'approval_mode' => 'any',
+                    'timeout_due_in' => 'P1D',
+                    'timeout_on_timeout' => 'reject_end',
+                ],
+            ],
+        ]);
+
+        $approvalNode = collect($definition['nodes'])->firstWhere('type', 'approval');
+
+        $this->assertIsArray($approvalNode);
+        $this->assertSame('P1D', $approvalNode['config']['timeout']['due_in'] ?? null);
+        $this->assertSame('reject_end', $approvalNode['config']['timeout']['on_timeout'] ?? null);
+
+        $formState = StandardWorkflowDefinitionMapper::parseFormState($definition);
+
+        $this->assertNotNull($formState);
+        $this->assertSame('P1D', $formState['workflow_steps'][0]['data']['timeout_due_in'] ?? null);
+        $this->assertSame('reject_end', $formState['workflow_steps'][0]['data']['timeout_on_timeout'] ?? null);
+
+        $rebuilt = StandardWorkflowDefinitionMapper::buildDefinition(
+            $workflow,
+            $formState['workflow_steps'],
+            endOutcomes: $formState['end_outcomes'],
+        );
+
+        $rebuiltApproval = collect($rebuilt['nodes'])->firstWhere('type', 'approval');
+
+        $this->assertIsArray($rebuiltApproval);
+        $this->assertSame('P1D', $rebuiltApproval['config']['timeout']['due_in'] ?? null);
+        $this->assertSame('reject_end', $rebuiltApproval['config']['timeout']['on_timeout'] ?? null);
+
+        $validation = (new WorkflowDefinitionValidator)->validate($rebuilt, strict: false);
+        $this->assertTrue($validation->isValid());
+    }
 }
