@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.1] - 2026-07-07
+
+### Changed
+
+- Requires `dbflowlabs/core` `^1.0.0-rc.1` (aligned with Core API freeze RC).
+- Documentation updated for RC installation pins and version pairing.
+
+### Upgrade notes
+
+- Pin `dbflowlabs/filament:1.0.0-rc.1` with `dbflowlabs/core:1.0.0-rc.1`.
+- No Filament API changes from `0.9.0-beta.1`; validate against Core `UPGRADE-1.0.md` when upgrading Core.
+
 ## [0.9.0-beta.1] - 2026-07-07
 
 ### Added
