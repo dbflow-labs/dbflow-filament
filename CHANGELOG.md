@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0-beta.1] - Unreleased
+## [0.9.0-beta.1] - 2026-07-07
 
 ### Added
 
@@ -21,11 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `MyWorkflowTaskActionRunner` routes approve / reject / reassign through `DBFlow` facade.
-- Requires `dbflowlabs/core` `^0.5.0-alpha.1` (pair with Core `0.9.x-beta` at release).
+- Requires `dbflowlabs/core` `^0.9.0-beta`.
 
 ### Documentation
 
 - Aligns with Core `docs/integration/filament.md` and acceptance checklist.
+
+### Upgrade notes
+
+- Pin `dbflowlabs/filament:0.9.0-beta.1` with `dbflowlabs/core:0.9.0-beta.1`.
+- Register `UserAssigneeOptionsResolver` for reassign target pickers.
+- Implement host `PermissionChecker` for `dbflow.tasks.reassign` and `dbflow.workflow_instances.cancel` when exposing new actions.
+- Host models may implement `WorkflowRouteResolvable` for linked Subject column URLs.
 
 ## [0.3.1-alpha.1] - 2026-07-07
 
