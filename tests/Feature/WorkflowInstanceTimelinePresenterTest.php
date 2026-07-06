@@ -43,6 +43,7 @@ final class WorkflowInstanceTimelinePresenterTest extends TestCase
 
         $this->assertSame('Workflow started', $presenter->eventLabel(WorkflowLogEvent::WorkflowStarted->value));
         $this->assertSame('Task approved', $presenter->eventLabel(WorkflowLogEvent::TaskApproved->value));
+        $this->assertSame('Task cancelled', $presenter->eventLabel(WorkflowLogEvent::TaskCancelled->value));
         $this->assertSame('Unknown event', $presenter->eventLabel('custom_unknown_event'));
     }
 

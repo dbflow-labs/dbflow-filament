@@ -161,7 +161,7 @@ See the [dbflowlabs/core README](https://github.com/dbflow-labs/dbflow-core/blob
 
 | Config file | Primary switch | What it controls |
 | ----------- | -------------- | ---------------- |
-| `config/dbflow.php` | `enabled` | Core runtime (`DBFLOW_ENABLED=false` skips bindings, migrations, and runtime actions) |
+| `config/dbflow.php` | `enabled` | Core runtime (`DBFLOW_ENABLED=false` disables runtime APIs; definition sync/validate remain available — see Core README) |
 | `config/dbflow-filament.php` | `enabled` | Whether Filament pages/resources are exposed when registered |
 
 `DBFlowFilamentPanel` checks **`dbflow-filament.enabled`** and **`panel_registration_mode`**. It does **not** read `dbflow.enabled`. Hosts that want a single feature flag should wrap both configs in their own toggle.
