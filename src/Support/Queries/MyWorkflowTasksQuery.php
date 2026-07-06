@@ -17,13 +17,19 @@ declare(strict_types=1);
 
 namespace DbflowLabs\Filament\Support\Queries;
 
-use DbflowLabs\Core\Enums\WorkflowTaskAssignmentStatus;
-use DbflowLabs\Core\Enums\WorkflowTaskStatus;
+use DbflowLabs\Core\Services\WorkflowTaskQueryService;
 use DbflowLabs\Core\Models\WorkflowTaskAssignment;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Filament table adapter over Core {@see WorkflowTaskQueryService} pending-assignment semantics.
+ */
 final class MyWorkflowTasksQuery
 {
+    public function __construct(
+        private readonly WorkflowTaskQueryService $workflowTaskQueryService,
+    ) {}
+
     /**
      * Pending workflow task assignments for the given user (read-only list source).
      *
@@ -31,16 +37,6 @@ final class MyWorkflowTasksQuery
      */
     public function pendingForUser(int|string $userId): Builder
     {
-        return WorkflowTaskAssignment::query()
-            ->where('assignee_user_id', $userId)
-            ->where('status', WorkflowTaskAssignmentStatus::Pending)
-            ->whereHas('workflowTask', function (Builder $query): void {
-                $query->where('status', WorkflowTaskStatus::Pending);
-            })
-            ->with([
-                'workflowTask.workflowInstance.workflow',
-                'workflowTask.workflowInstance',
-            ])
-            ->orderByDesc('created_at');
+        return $this->workflowTaskQueryService->pendingAssignmentsQueryForUser((string) $userId);
     }
 }

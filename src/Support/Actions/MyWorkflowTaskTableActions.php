@@ -18,9 +18,11 @@ declare(strict_types=1);
 namespace DbflowLabs\Filament\Support\Actions;
 
 use DbflowLabs\Core\Models\WorkflowTaskAssignment;
+use DbflowLabs\Filament\Contracts\UserAssigneeOptionsResolver;
 use DbflowLabs\Filament\Support\Actions\MyWorkflowTaskActionRunner;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -104,6 +106,57 @@ final class MyWorkflowTaskTableActions
             });
     }
 
+    public static function reassign(): Action
+    {
+        return Action::make('reassignTask')
+            ->label((string) __('dbflow-filament::dbflow-filament.actions.reassign'))
+            ->icon('heroicon-o-arrow-path-rounded-square')
+            ->color('warning')
+            ->visible(fn (WorkflowTaskAssignment $record): bool => self::canShowReassign($record, Auth::user()))
+            ->form([
+                Select::make('to_user_id')
+                    ->label((string) __('dbflow-filament::dbflow-filament.fields.reassign_to'))
+                    ->options(fn (WorkflowTaskAssignment $record): array => self::reassignTargetOptions($record))
+                    ->searchable()
+                    ->required()
+                    ->validationMessages([
+                        'required' => (string) __('dbflow-filament::dbflow-filament.validation.reassign_target_required'),
+                    ]),
+                Textarea::make('comment')
+                    ->label((string) __('dbflow-filament::dbflow-filament.fields.comment'))
+                    ->placeholder((string) __('dbflow-filament::dbflow-filament.fields.reassign_comment_placeholder'))
+                    ->rows(3),
+            ])
+            ->requiresConfirmation()
+            ->modalHeading((string) __('dbflow-filament::dbflow-filament.modals.reassign.heading'))
+            ->modalDescription((string) __('dbflow-filament::dbflow-filament.modals.reassign.description'))
+            ->action(function (WorkflowTaskAssignment $record, array $data): void {
+                $user = Auth::user();
+
+                if (! $user instanceof Authenticatable) {
+                    return;
+                }
+
+                $toUserId = isset($data['to_user_id']) ? (string) $data['to_user_id'] : '';
+
+                if ($toUserId === '') {
+                    return;
+                }
+
+                $comment = isset($data['comment']) && is_string($data['comment']) && $data['comment'] !== ''
+                    ? $data['comment']
+                    : null;
+
+                $result = app(MyWorkflowTaskActionRunner::class)->reassign($record, $user, $toUserId, $comment);
+
+                self::notifyActionResult(
+                    $result,
+                    successTitle: (string) __('dbflow-filament::dbflow-filament.notifications.task_reassigned'),
+                    failureTitle: (string) __('dbflow-filament::dbflow-filament.notifications.reassign_failed'),
+                );
+            });
+    }
+
     public static function canShowApprove(WorkflowTaskAssignment $assignment, mixed $user): bool
     {
         if (! (bool) config('dbflow-filament.enable_my_task_actions', true)) {
@@ -128,6 +181,38 @@ final class MyWorkflowTaskTableActions
         }
 
         return WorkflowFilamentPermissions::can('tasks', 'reject', $assignment, $user);
+    }
+
+    public static function canShowReassign(WorkflowTaskAssignment $assignment, mixed $user): bool
+    {
+        if (! (bool) config('dbflow-filament.enable_my_task_reassign_action', true)) {
+            return false;
+        }
+
+        if (! (bool) config('dbflow-filament.enable_my_task_actions', true)) {
+            return false;
+        }
+
+        if (! MyWorkflowTaskActionRunner::canActOnAssignment($assignment, $user)) {
+            return false;
+        }
+
+        return WorkflowFilamentPermissions::can('tasks', 'reassign', $assignment, $user);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function reassignTargetOptions(WorkflowTaskAssignment $assignment): array
+    {
+        $options = app(UserAssigneeOptionsResolver::class)->options();
+        $currentAssigneeId = (string) $assignment->assignee_user_id;
+
+        return array_filter(
+            $options,
+            static fn (string $label, string $userId): bool => $userId !== $currentAssigneeId,
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 
     private static function notifyActionResult(

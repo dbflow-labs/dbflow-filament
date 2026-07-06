@@ -263,6 +263,8 @@ return [
     'actions' => [
         'approve' => 'Approve',
         'reject' => 'Reject',
+        'reassign' => 'Reassign',
+        'cancel' => 'Cancel workflow',
         'view' => 'View',
         'definitions' => [
             'validate_draft' => 'Check Configuration',
@@ -288,6 +290,10 @@ return [
         'comment_placeholder' => 'Optional comment for this approval',
         'rejection_reason' => 'Rejection reason',
         'rejection_reason_placeholder' => 'Explain why this task is being rejected',
+        'reassign_to' => 'Reassign to',
+        'reassign_comment_placeholder' => 'Optional note for the new assignee',
+        'cancel_reason' => 'Cancellation reason',
+        'cancel_reason_placeholder' => 'Optional reason for cancelling this workflow',
     ],
 
     'modals' => [
@@ -299,10 +305,19 @@ return [
             'heading' => 'Reject task',
             'description' => 'Rejecting this task will end or return the approval process according to the configured rules.',
         ],
+        'reassign' => [
+            'heading' => 'Reassign task',
+            'description' => 'Transfer your pending approval assignment to another user.',
+        ],
+        'cancel_instance' => [
+            'heading' => 'Cancel workflow',
+            'description' => 'Cancel this running workflow instance. Pending tasks will be closed.',
+        ],
     ],
 
     'validation' => [
         'rejection_reason_required' => 'A rejection reason is required.',
+        'reassign_target_required' => 'Select a user to reassign this task to.',
     ],
 
     'notifications' => [
@@ -312,6 +327,11 @@ return [
         'task_not_available_body' => 'This task may have already been processed or is no longer assigned to you.',
         'approve_failed' => 'Unable to approve task',
         'reject_failed' => 'Unable to reject task',
+        'task_reassigned' => 'Task reassigned successfully.',
+        'reassign_failed' => 'Unable to reassign task',
+        'workflow_cancelled' => 'Workflow cancelled successfully.',
+        'cancel_failed' => 'Unable to cancel workflow',
+        'instance_not_cancellable_body' => 'This workflow is no longer running and cannot be cancelled.',
         'action_failed_body' => 'The approval action could not be completed. Please try again or contact an administrator.',
         'definitions' => [
             'validation_passed' => 'Configuration is valid',

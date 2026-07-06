@@ -26,7 +26,7 @@ use DbflowLabs\Filament\Contracts\PermissionChecker;
 use DbflowLabs\Filament\Contracts\StatusBadgeMapper;
 use DbflowLabs\Filament\Contracts\UserDisplayResolver;
 use DbflowLabs\Filament\Contracts\WorkflowableLabelResolver;
-use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceDetailPresenter;
+use DbflowLabs\Filament\Support\Actions\WorkflowInstanceHeaderActions;
 use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceTimelinePresenter;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Pages\Page;
@@ -80,6 +80,20 @@ class ViewWorkflowInstance extends Page
                 'tasks.assignments.assignee',
             ])
             ->findOrFail($record);
+    }
+
+    /**
+     * @return array<\Filament\Actions\Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        if (! (bool) config('dbflow-filament.enable_instance_cancel_action', true)) {
+            return [];
+        }
+
+        return [
+            WorkflowInstanceHeaderActions::cancel(fn (): ?WorkflowInstance => $this->instance),
+        ];
     }
 
     public function getTitle(): string|Htmlable

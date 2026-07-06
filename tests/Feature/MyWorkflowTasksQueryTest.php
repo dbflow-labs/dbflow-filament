@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DbflowLabs\Filament\Tests\Feature;
 
+use DbflowLabs\Core\Services\WorkflowTaskQueryService;
 use DbflowLabs\Filament\Support\Queries\MyWorkflowTasksQuery;
 use DbflowLabs\Filament\Tests\Concerns\BuildsWorkflowTaskFixtures;
 use DbflowLabs\Filament\Tests\TestCase;
@@ -64,5 +65,28 @@ final class MyWorkflowTasksQueryTest extends TestCase
         );
 
         $this->assertCount(0, app(MyWorkflowTasksQuery::class)->pendingForUser(10)->get());
+    }
+
+    #[Test]
+    public function pending_for_user_eager_loads_workflow_version_via_core_query_service(): void
+    {
+        $this->createPendingAssignmentForUserId(assigneeUserId: 10);
+
+        $assignment = app(MyWorkflowTasksQuery::class)->pendingForUser('10')->firstOrFail();
+
+        $this->assertTrue($assignment->relationLoaded('workflowTask'));
+        $this->assertTrue($assignment->workflowTask?->relationLoaded('workflowInstance'));
+        $this->assertTrue($assignment->workflowTask?->workflowInstance?->relationLoaded('workflowVersion'));
+    }
+
+    #[Test]
+    public function query_class_delegates_to_core_workflow_task_query_service(): void
+    {
+        $source = (string) file_get_contents(
+            (new \ReflectionClass(MyWorkflowTasksQuery::class))->getFileName(),
+        );
+
+        $this->assertStringContainsString(WorkflowTaskQueryService::class, $source);
+        $this->assertStringContainsString('pendingAssignmentsQueryForUser', $source);
     }
 }

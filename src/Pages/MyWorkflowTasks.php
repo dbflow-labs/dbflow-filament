@@ -218,6 +218,7 @@ class MyWorkflowTasks extends Page implements HasTable
         return [
             MyWorkflowTaskTableActions::approve(),
             MyWorkflowTaskTableActions::reject(),
+            MyWorkflowTaskTableActions::reassign(),
         ];
     }
 

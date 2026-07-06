@@ -113,12 +113,39 @@ final class MyWorkflowTaskActionRunnerTest extends TestCase
     }
 
     #[Test]
-    public function runner_source_has_no_host_namespace_imports(): void
+    public function reassign_transitions_pending_assignment_to_new_user(): void
+    {
+        $this->ensureUserExists(20);
+
+        $assignment = $this->createPendingAssignmentForUserId(assigneeUserId: 10);
+        $user = new TestAuthenticatableUser(10);
+
+        $result = app(MyWorkflowTaskActionRunner::class)->reassign($assignment, $user, '20', 'Handover');
+
+        $this->assertTrue($result->successful);
+
+        $assignment->refresh();
+        $this->assertSame(WorkflowTaskAssignmentStatus::Reassigned, $assignment->status);
+
+        $replacement = \DbflowLabs\Core\Models\WorkflowTaskAssignment::query()
+            ->where('workflow_task_id', $assignment->workflow_task_id)
+            ->where('assignee_user_id', '20')
+            ->where('status', WorkflowTaskAssignmentStatus::Pending)
+            ->first();
+
+        $this->assertNotNull($replacement);
+    }
+
+    #[Test]
+    public function runner_source_uses_dbflow_facade_for_runtime_actions(): void
     {
         $source = (string) file_get_contents(
             (new \ReflectionClass(MyWorkflowTaskActionRunner::class))->getFileName(),
         );
 
+        $this->assertStringContainsString('DBFlow::approve', $source);
+        $this->assertStringContainsString('DBFlow::reject', $source);
+        $this->assertStringContainsString('DBFlow::reassign', $source);
         $this->assertStringNotContainsString('App\\DBFlow', $source);
         $this->assertStringNotContainsString('DBErp', $source);
         $this->assertStringNotContainsString('PurchaseRequest', $source);

@@ -30,10 +30,12 @@ final class WorkflowFilamentPermissions
             'view' => 'dbflow.tasks.view',
             'approve' => 'dbflow.tasks.approve',
             'reject' => 'dbflow.tasks.reject',
+            'reassign' => 'dbflow.tasks.reassign',
         ],
         'workflow_instances' => [
             'view' => 'dbflow.workflow_instances.view',
             'view_any' => 'dbflow.workflow_instances.view_any',
+            'cancel' => 'dbflow.workflow_instances.cancel',
         ],
         'definitions' => [
             'view' => 'dbflow.definitions.view',
@@ -57,6 +59,8 @@ final class WorkflowFilamentPermissions
         'workflow_instances.view_any' => 'workflow_instances',
         'tasks.approve' => 'approve_task',
         'tasks.reject' => 'reject_task',
+        'tasks.reassign' => 'reassign_task',
+        'workflow_instances.cancel' => 'cancel_workflow_instance',
     ];
 
     public static function checker(): PermissionChecker

@@ -44,6 +44,10 @@ return [
 
     'enable_my_task_actions' => env('DBFLOW_FILAMENT_MY_TASK_ACTIONS', true),
 
+    'enable_my_task_reassign_action' => env('DBFLOW_FILAMENT_MY_TASK_REASSIGN', true),
+
+    'enable_instance_cancel_action' => env('DBFLOW_FILAMENT_INSTANCE_CANCEL', true),
+
     'require_reject_note' => env('DBFLOW_FILAMENT_REQUIRE_REJECT_NOTE', true),
 
     /*
@@ -64,10 +68,12 @@ return [
             'view' => 'dbflow.tasks.view',
             'approve' => 'dbflow.tasks.approve',
             'reject' => 'dbflow.tasks.reject',
+            'reassign' => 'dbflow.tasks.reassign',
         ],
         'workflow_instances' => [
             'view' => 'dbflow.workflow_instances.view',
             'view_any' => 'dbflow.workflow_instances.view_any',
+            'cancel' => 'dbflow.workflow_instances.cancel',
         ],
         'definitions' => [
             'view' => 'dbflow.definitions.view',
@@ -88,6 +94,8 @@ return [
         'my_tasks' => 'dbflow.tasks.view',
         'approve_task' => 'dbflow.tasks.approve',
         'reject_task' => 'dbflow.tasks.reject',
+        'reassign_task' => 'dbflow.tasks.reassign',
+        'cancel_workflow_instance' => 'dbflow.workflow_instances.cancel',
     ],
 
     'enable_workflow_instances_page' => env('DBFLOW_FILAMENT_INSTANCES', true),

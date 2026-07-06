@@ -83,6 +83,13 @@ final class MyWorkflowTasksPageTest extends TestCase
 
         $this->assertStringContainsString(MyWorkflowTasksQuery::class, $source);
         $this->assertStringContainsString('pendingForUser', $source);
+
+        $querySource = (string) file_get_contents(
+            (new ReflectionClass(MyWorkflowTasksQuery::class))->getFileName(),
+        );
+
+        $this->assertStringContainsString('WorkflowTaskQueryService', $querySource);
+        $this->assertStringContainsString('pendingAssignmentsQueryForUser', $querySource);
     }
 
     #[Test]
@@ -96,9 +103,10 @@ final class MyWorkflowTasksPageTest extends TestCase
 
         $actions = $method->invoke($page);
 
-        $this->assertCount(2, $actions);
+        $this->assertCount(3, $actions);
         $this->assertSame('approveTask', $actions[0]->getName());
         $this->assertSame('rejectTask', $actions[1]->getName());
+        $this->assertSame('reassignTask', $actions[2]->getName());
     }
 
     #[Test]
