@@ -12,6 +12,8 @@ return [
             'title' => 'My Workflow Tasks',
             'navigation_label' => 'My Workflow Tasks',
             'subheading' => 'Review and complete approval items assigned to you.',
+            'runtime_disabled_heading' => 'Workflow runtime is disabled',
+            'runtime_disabled_description' => 'Approval actions are hidden while DBFLOW_ENABLED is false. Definition sync and validation remain available through Core.',
             'empty_state_heading' => 'No pending approvals',
             'empty_state_description' => 'You have no approval items waiting for action.',
         ],

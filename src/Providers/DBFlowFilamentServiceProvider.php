@@ -28,6 +28,7 @@ use DbflowLabs\Filament\Support\Actions\WorkflowDraftActionRunner;
 use DbflowLabs\Filament\Support\Actions\WorkflowInstanceActionRunner;
 use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceTimelinePresenter;
 use DbflowLabs\Filament\Support\Queries\MyWorkflowTasksQuery;
+use DbflowLabs\Filament\Support\WorkflowableShowUrlResolver;
 use DbflowLabs\Filament\Support\WorkflowDefinitionEditorResolverManager;
 use DbflowLabs\Filament\Support\WorkflowDraftValidationSync;
 use Illuminate\Support\ServiceProvider;
@@ -48,6 +49,7 @@ final class DBFlowFilamentServiceProvider extends ServiceProvider
         $this->app->singleton(MyWorkflowTaskActionRunner::class);
         $this->app->singleton(WorkflowInstanceActionRunner::class);
         $this->app->singleton(MyWorkflowTasksQuery::class);
+        $this->app->singleton(WorkflowableShowUrlResolver::class);
         $this->app->singleton(WorkflowInstanceTimelinePresenter::class);
         $this->app->singleton(WorkflowDraftActionRunner::class);
         $this->app->singleton(WorkflowDraftValidationSync::class);

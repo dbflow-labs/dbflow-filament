@@ -24,6 +24,7 @@ use DbflowLabs\Filament\Contracts\StatusBadgeMapper;
 use DbflowLabs\Filament\Contracts\WorkflowableLabelResolver;
 use DbflowLabs\Filament\Support\Actions\MyWorkflowTaskTableActions;
 use DbflowLabs\Filament\Support\Queries\MyWorkflowTasksQuery;
+use DbflowLabs\Filament\Support\WorkflowableShowUrlResolver;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -123,6 +124,7 @@ class MyWorkflowTasks extends Page implements HasTable
     public function table(Table $table): Table
     {
         $workflowableLabelResolver = app(WorkflowableLabelResolver::class);
+        $workflowableShowUrlResolver = app(WorkflowableShowUrlResolver::class);
         $statusBadgeMapper = app(StatusBadgeMapper::class);
         $workflowDefinitionDisplay = app(WorkflowDefinitionDisplay::class);
 
@@ -163,9 +165,19 @@ class MyWorkflowTasks extends Page implements HasTable
                 TextColumn::make('workflowTask.workflowInstance.workflowable_type')
                     ->label((string) __('dbflow-filament::dbflow-filament.tables.columns.workflowable_type'))
                     ->formatStateUsing(fn (?string $state): string => $workflowableLabelResolver->morphTypeLabel($state)),
-                TextColumn::make('workflowTask.workflowInstance.workflowable_id')
-                    ->label((string) __('dbflow-filament::dbflow-filament.tables.columns.workflowable_id'))
-                    ->formatStateUsing(fn (?string $state): string => $workflowableLabelResolver->morphIdLabel($state)),
+                TextColumn::make('subject')
+                    ->label((string) __('dbflow-filament::dbflow-filament.tables.columns.subject'))
+                    ->state(function (WorkflowTaskAssignment $record) use ($workflowableLabelResolver): string {
+                        return $workflowableLabelResolver->labelFor(
+                            $record->workflowTask?->workflowInstance?->workflowable,
+                        );
+                    })
+                    ->url(function (WorkflowTaskAssignment $record) use ($workflowableShowUrlResolver): ?string {
+                        return $workflowableShowUrlResolver->resolve(
+                            $record->workflowTask?->workflowInstance?->workflowable,
+                        );
+                    })
+                    ->openUrlInNewTab((bool) config('dbflow-filament.open_workflowable_links_in_new_tab', false)),
                 TextColumn::make('workflowTask.status')
                     ->label((string) __('dbflow-filament::dbflow-filament.tables.columns.status'))
                     ->badge()
@@ -220,6 +232,11 @@ class MyWorkflowTasks extends Page implements HasTable
             MyWorkflowTaskTableActions::reject(),
             MyWorkflowTaskTableActions::reassign(),
         ];
+    }
+
+    public function isCoreRuntimeDisabled(): bool
+    {
+        return ! \DbflowLabs\Core\Support\DbflowRuntime::isEnabled();
     }
 
     protected function pendingTasksQuery(): Builder

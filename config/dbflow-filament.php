@@ -241,6 +241,8 @@ return [
 
     'date_time_format' => 'Y-m-d H:i:s',
 
+    'open_workflowable_links_in_new_tab' => env('DBFLOW_FILAMENT_OPEN_WORKFLOWABLE_IN_NEW_TAB', false),
+
     'table_polling_interval' => null,
 
 ];

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace DbflowLabs\Filament\Support\Actions;
 
 use DbflowLabs\Core\Models\WorkflowTaskAssignment;
+use DbflowLabs\Core\Support\DbflowRuntime;
 use DbflowLabs\Filament\Contracts\UserAssigneeOptionsResolver;
 use DbflowLabs\Filament\Support\Actions\MyWorkflowTaskActionRunner;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
@@ -159,6 +160,10 @@ final class MyWorkflowTaskTableActions
 
     public static function canShowApprove(WorkflowTaskAssignment $assignment, mixed $user): bool
     {
+        if (! DbflowRuntime::isEnabled()) {
+            return false;
+        }
+
         if (! (bool) config('dbflow-filament.enable_my_task_actions', true)) {
             return false;
         }
@@ -172,6 +177,10 @@ final class MyWorkflowTaskTableActions
 
     public static function canShowReject(WorkflowTaskAssignment $assignment, mixed $user): bool
     {
+        if (! DbflowRuntime::isEnabled()) {
+            return false;
+        }
+
         if (! (bool) config('dbflow-filament.enable_my_task_actions', true)) {
             return false;
         }
@@ -185,6 +194,10 @@ final class MyWorkflowTaskTableActions
 
     public static function canShowReassign(WorkflowTaskAssignment $assignment, mixed $user): bool
     {
+        if (! DbflowRuntime::isEnabled()) {
+            return false;
+        }
+
         if (! (bool) config('dbflow-filament.enable_my_task_reassign_action', true)) {
             return false;
         }

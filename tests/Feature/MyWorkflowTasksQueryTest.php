@@ -77,6 +77,7 @@ final class MyWorkflowTasksQueryTest extends TestCase
         $this->assertTrue($assignment->relationLoaded('workflowTask'));
         $this->assertTrue($assignment->workflowTask?->relationLoaded('workflowInstance'));
         $this->assertTrue($assignment->workflowTask?->workflowInstance?->relationLoaded('workflowVersion'));
+        $this->assertTrue($assignment->workflowTask?->workflowInstance?->relationLoaded('workflowable'));
     }
 
     #[Test]

@@ -12,8 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **0.9 ecosystem alignment:** `MyWorkflowTasksQuery` delegates to Core `WorkflowTaskQueryService::pendingAssignmentsQueryForUser()` (includes `workflowVersion` eager load).
 - Reassign action on My Workflow Tasks (`DBFlow::reassign()`).
 - Cancel workflow header action on View Workflow Instance (`DBFlow::cancel()`).
+- Subject column with `WorkflowRouteResolvable` links on My Workflow Tasks.
+- Runtime-disabled banner and hidden task/instance actions when `DBFLOW_ENABLED=false`.
+- `WorkflowableShowUrlResolver` helper.
 - Permissions: `dbflow.tasks.reassign`, `dbflow.workflow_instances.cancel`.
-- Config toggles: `enable_my_task_reassign_action`, `enable_instance_cancel_action`.
+- Config toggles: `enable_my_task_reassign_action`, `enable_instance_cancel_action`, `open_workflowable_links_in_new_tab`.
 
 ### Changed
 

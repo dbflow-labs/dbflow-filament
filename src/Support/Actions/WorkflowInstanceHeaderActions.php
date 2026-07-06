@@ -20,6 +20,7 @@ namespace DbflowLabs\Filament\Support\Actions;
 use Closure;
 use DbflowLabs\Core\Enums\WorkflowInstanceStatus;
 use DbflowLabs\Core\Models\WorkflowInstance;
+use DbflowLabs\Core\Support\DbflowRuntime;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -90,6 +91,10 @@ final class WorkflowInstanceHeaderActions
 
     public static function canShowCancel(?WorkflowInstance $instance, mixed $user): bool
     {
+        if (! DbflowRuntime::isEnabled()) {
+            return false;
+        }
+
         if (! (bool) config('dbflow-filament.enable_instance_cancel_action', true)) {
             return false;
         }
