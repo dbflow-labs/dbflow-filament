@@ -32,7 +32,7 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 - [End-to-end integration checklist](#end-to-end-integration-checklist)
 - [Troubleshooting](#troubleshooting)
 - [Typical integration flow](#typical-integration-flow)
-- [Release candidate scope](#release-candidate-scope)
+- [Stable release scope](#stable-release-scope)
 - [Development](#development)
 - [Support](#support)
 
@@ -45,7 +45,7 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 | First release   | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
-| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^1.0.0-rc.1` |
+| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^1.0` |
 | Filament        | `^5.6`                                                                               |
 | PHP             | `^8.3`                                                                               |
 | Host framework  | Laravel 13.x                                                                         |
@@ -67,41 +67,21 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 - PHP `^8.3`
 - Laravel 13.x
 - Filament `^5.6`
-- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^1.0.0-rc.1`
+- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^1.0`
 - Core database migrations applied (`php artisan migrate`)
 - Host user model configured in Core (`DBFLOW_AUTH_MODEL`, see [Core prerequisites](#core-prerequisites))
 
 ## Installation
 
-### Packagist (release candidate)
-
-If your application uses `minimum-stability: stable` (the Laravel default), pin RC packages with an explicit stability flag:
+### Packagist (stable)
 
 ```bash
-composer require "dbflowlabs/filament:1.0.0-rc.2@RC" "dbflowlabs/core:1.0.0-rc.1@RC"
-```
-
-If your project already allows prerelease stability, you may use:
-
-```bash
-composer require "dbflowlabs/filament:1.0.0-rc.2"
+composer require dbflowlabs/filament
 ```
 
 `dbflowlabs/core` is installed automatically as a dependency of this package.
 
-For ongoing RC updates after the first pin:
-
-```bash
-composer require "dbflowlabs/filament:^1.0.0-rc.2@RC"
-```
-
-To pin Core explicitly:
-
-```bash
-composer require "dbflowlabs/core:1.0.0-rc.1@RC"
-```
-
-After installation, confirm that `composer.lock` records the expected RC version and resolved commit hash.
+For monorepo development against a local Core worktree, copy `composer.local.json.dist` to `composer.local.json` and use `scripts/merge-composer-local.php` from `dbflowlabs/core` (see Core `docs/RELEASE-1.0.md`).
 
 ### Publish assets
 
@@ -534,9 +514,9 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 7. Trigger `DBFlow::start()` from host business actions; guard downstream operations until workflows complete.
 8. Open the Filament panel and verify tasks, instances, detail, and (if enabled) definition surfaces.
 
-## Release candidate scope
+## Stable release scope
 
-`1.0.0-rc.2` pairs with Core `1.0.0-rc.1` under the frozen integration contract. Pin exact RC tags until stable `1.0.0`.
+`1.0.0` pairs with Core `^1.0` under the frozen integration contract.
 
 ### Included
 

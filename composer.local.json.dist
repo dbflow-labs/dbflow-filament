@@ -1,0 +1,15 @@
+{
+  "repositories": [
+    {
+      "name": "dbflow-core",
+      "type": "path",
+      "url": "../dbflow-core",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "dbflowlabs/core": "1.0.0"
+        }
+      }
+    }
+  ]
+}
