@@ -128,6 +128,18 @@ final class StandardLinearApprovalDefinitionEditorTest extends TestCase
     }
 
     #[Test]
+    public function condition_branch_selects_read_workflow_steps_from_form_root(): void
+    {
+        $contents = (string) file_get_contents(
+            dirname(__DIR__, 2).'/src/Support/Editors/StandardWorkflowDefinitionEditor.php',
+        );
+
+        $this->assertStringContainsString("workflowStepKeyOptions(\$get('/workflow_steps'))", $contents);
+        $this->assertStringContainsString("\$get('/end_outcomes')", $contents);
+        $this->assertStringNotContainsString("workflowStepKeyOptions(\$get('workflow_steps'))", $contents);
+    }
+
+    #[Test]
     public function default_editor_does_not_expose_definition_schema_preview(): void
     {
         $contents = (string) file_get_contents(

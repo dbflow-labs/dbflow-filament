@@ -241,14 +241,14 @@ final class StandardWorkflowDefinitionEditor
                     ->live(),
                 Select::make('true_branch_step_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_step_key'))
-                    ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('workflow_steps')))
+                    ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('/workflow_steps')))
                     ->visible(fn (Get $get): bool => $get('true_branch') === StandardWorkflowBranchTargets::STEP)
                     ->required(fn (Get $get): bool => $get('true_branch') === StandardWorkflowBranchTargets::STEP)
                     ->native(false)
                     ->helperText(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_step_key_helper')),
                 Select::make('false_branch_step_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_step_key'))
-                    ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('workflow_steps')))
+                    ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('/workflow_steps')))
                     ->visible(fn (Get $get): bool => $get('false_branch') === StandardWorkflowBranchTargets::STEP)
                     ->required(fn (Get $get): bool => $get('false_branch') === StandardWorkflowBranchTargets::STEP)
                     ->native(false)
@@ -256,8 +256,8 @@ final class StandardWorkflowDefinitionEditor
                 Select::make('true_branch_end_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_end_key'))
                     ->options(fn (Get $get): array => self::endOutcomeKeyOptions(
-                        $get('end_outcomes'),
-                        $get('workflow_steps'),
+                        $get('/end_outcomes'),
+                        $get('/workflow_steps'),
                     ))
                     ->visible(fn (Get $get): bool => in_array(
                         $get('true_branch'),
@@ -269,8 +269,8 @@ final class StandardWorkflowDefinitionEditor
                 Select::make('false_branch_end_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_end_key'))
                     ->options(fn (Get $get): array => self::endOutcomeKeyOptions(
-                        $get('end_outcomes'),
-                        $get('workflow_steps'),
+                        $get('/end_outcomes'),
+                        $get('/workflow_steps'),
                     ))
                     ->visible(fn (Get $get): bool => in_array(
                         $get('false_branch'),
