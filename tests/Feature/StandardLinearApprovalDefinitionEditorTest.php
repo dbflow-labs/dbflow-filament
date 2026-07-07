@@ -136,6 +136,8 @@ final class StandardLinearApprovalDefinitionEditorTest extends TestCase
 
         $this->assertStringContainsString("workflowStepKeyOptions(\$get('/workflow_steps'))", $contents);
         $this->assertStringContainsString("\$get('/end_outcomes')", $contents);
+        $this->assertStringContainsString("TextInput::make('step_key')", $contents);
+        $this->assertStringContainsString('getOptionLabelUsing', $contents);
         $this->assertStringNotContainsString("workflowStepKeyOptions(\$get('workflow_steps'))", $contents);
     }
 

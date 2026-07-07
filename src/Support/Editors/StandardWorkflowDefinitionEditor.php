@@ -83,6 +83,11 @@ final class StandardWorkflowDefinitionEditor
             Repeater::make('end_outcomes')
                 ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.end_outcomes'))
                 ->schema([
+                    TextInput::make('step_key')
+                        ->hiddenLabel()
+                        ->hidden()
+                        ->dehydrated()
+                        ->maxLength(120),
                     TextInput::make('step_label')
                         ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.end_outcome_label'))
                         ->required()
@@ -242,6 +247,7 @@ final class StandardWorkflowDefinitionEditor
                 Select::make('true_branch_step_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_step_key'))
                     ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('/workflow_steps')))
+                    ->getOptionLabelUsing(fn ($value, Get $get): ?string => self::workflowStepKeyLabel($value, $get))
                     ->visible(fn (Get $get): bool => $get('true_branch') === StandardWorkflowBranchTargets::STEP)
                     ->required(fn (Get $get): bool => $get('true_branch') === StandardWorkflowBranchTargets::STEP)
                     ->native(false)
@@ -249,6 +255,7 @@ final class StandardWorkflowDefinitionEditor
                 Select::make('false_branch_step_key')
                     ->label(__('dbflow-filament::dbflow-filament.forms.workflow_definitions.branch_step_key'))
                     ->options(fn (Get $get): array => self::workflowStepKeyOptions($get('/workflow_steps')))
+                    ->getOptionLabelUsing(fn ($value, Get $get): ?string => self::workflowStepKeyLabel($value, $get))
                     ->visible(fn (Get $get): bool => $get('false_branch') === StandardWorkflowBranchTargets::STEP)
                     ->required(fn (Get $get): bool => $get('false_branch') === StandardWorkflowBranchTargets::STEP)
                     ->native(false)
@@ -259,6 +266,7 @@ final class StandardWorkflowDefinitionEditor
                         $get('/end_outcomes'),
                         $get('/workflow_steps'),
                     ))
+                    ->getOptionLabelUsing(fn ($value, Get $get): ?string => self::branchEndOutcomeKeyLabel($value, $get))
                     ->visible(fn (Get $get): bool => in_array(
                         $get('true_branch'),
                         [StandardWorkflowBranchTargets::END_OUTCOME, StandardWorkflowBranchTargets::END],
@@ -272,6 +280,7 @@ final class StandardWorkflowDefinitionEditor
                         $get('/end_outcomes'),
                         $get('/workflow_steps'),
                     ))
+                    ->getOptionLabelUsing(fn ($value, Get $get): ?string => self::branchEndOutcomeKeyLabel($value, $get))
                     ->visible(fn (Get $get): bool => in_array(
                         $get('false_branch'),
                         [StandardWorkflowBranchTargets::END_OUTCOME, StandardWorkflowBranchTargets::END],
@@ -536,7 +545,33 @@ final class StandardWorkflowDefinitionEditor
             return [];
         }
 
-        return StandardWorkflowDefinitionMapper::previewStepKeyOptions($workflowSteps);
+        return StandardWorkflowDefinitionMapper::previewStepKeyOptions(array_values($workflowSteps));
+    }
+
+    private static function workflowStepKeyLabel(mixed $value, Get $get): ?string
+    {
+        $value = is_string($value) ? trim($value) : '';
+
+        if ($value === '') {
+            return null;
+        }
+
+        $options = self::workflowStepKeyOptions($get('/workflow_steps'));
+
+        return $options[$value] ?? $value;
+    }
+
+    private static function branchEndOutcomeKeyLabel(mixed $value, Get $get): ?string
+    {
+        $value = is_string($value) ? trim($value) : '';
+
+        if ($value === '') {
+            return null;
+        }
+
+        $options = self::endOutcomeKeyOptions($get('/end_outcomes'), $get('/workflow_steps'));
+
+        return $options[$value] ?? $value;
     }
 
     /**
@@ -550,8 +585,11 @@ final class StandardWorkflowDefinitionEditor
             return [];
         }
 
-        $blocks = is_array($workflowSteps) ? $workflowSteps : [];
+        $blocks = is_array($workflowSteps) ? array_values($workflowSteps) : [];
 
-        return StandardWorkflowDefinitionMapper::previewEndOutcomeKeyOptions($endOutcomes, $blocks);
+        return StandardWorkflowDefinitionMapper::previewEndOutcomeKeyOptions(
+            array_values($endOutcomes),
+            $blocks,
+        );
     }
 }
