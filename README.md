@@ -42,6 +42,7 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 | --------------- | ------------------------------------------------------------------------------------ |
 | Composer name   | `dbflowlabs/filament`                                                                |
 | Namespace       | `DbflowLabs\Filament`                                                                |
+| Current stable  | `1.0.0`                                                                              |
 | First release   | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
@@ -56,9 +57,11 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 | ---------------------------- | ------------------------------------------------------------------------------------ |
 | **My Workflow Tasks**        | Pending assignments with approve, reject, reassign; subject links via `WorkflowRouteResolvable` |
 | **Workflow Instances**       | Searchable runtime workflow instance list                                            |
-| **Workflow Instance Detail** | Read-only workflow instance detail page with audit timeline                          |
+| **Workflow Instance Detail** | Instance detail with audit timeline (including `task_reassigned` / `task_timed_out` events) and optional cancel action |
 | **Workflow Definitions**     | Filament resource for draft CRUD, validation, and publishing                         |
 | **Extension Contracts**      | Host adapters for permissions, labels, status badges, users, and assignee options    |
+
+When `DBFLOW_ENABLED=false`, task approve/reject/reassign and instance cancel actions are hidden and a runtime-disabled notice is shown on **My Workflow Tasks** (definition sync/validate remain available through Core).
 
 Hosts opt in explicitly. This package does **not** auto-register Filament pages or resources during `boot()`. You must call `DBFlowFilamentPanel::register($panel)` (or the manual equivalents) from your `PanelProvider`.
 
@@ -81,7 +84,7 @@ composer require dbflowlabs/filament
 
 `dbflowlabs/core` is installed automatically as a dependency of this package.
 
-For monorepo development against a local Core worktree, copy `composer.local.json.dist` to `composer.local.json` and use `scripts/merge-composer-local.php` from `dbflowlabs/core` (see Core `docs/RELEASE-1.0.md`).
+For monorepo development against a local Core worktree, copy `composer.local.json.dist` to `composer.local.json` and use `scripts/merge-composer-local.php` from `dbflowlabs/core` (see Core [UPGRADE-1.0.md](https://github.com/dbflow-labs/dbflow-core/blob/main/UPGRADE-1.0.md)).
 
 ### Publish assets
 
@@ -133,7 +136,7 @@ DBFLOW_AUTH_GUARD=web
 DBFLOW_AUTH_TABLE=users
 ```
 
-Core stores workflow user references (`assignee_user_id`, `started_by_user_id`, `actor_user_id`) as strings. Integer primary keys still work (stored as `"1"`); UUID/ULID primary keys are supported in Core 0.3+.
+Core stores workflow user references (`assignee_user_id`, `started_by_user_id`, `actor_user_id`) as strings. Integer primary keys still work (stored as `"1"`); UUID/ULID primary keys are supported in Core 1.0.
 
 See the [dbflowlabs/core README](https://github.com/dbflow-labs/dbflow-core/blob/main/README.md) for `binding_mode`, hooks, and runtime APIs.
 
@@ -172,7 +175,7 @@ When using the **UI definition editor**, approval steps may optionally set `time
 Core ships official `dbflow:sync` (`--dry-run`, `--workflow=`) and `dbflow:validate` (`--strict`, `--workflow=`, `--source=`) commands. Filament does not bundle its own sync command.
 
 > [!NOTE]
-> **Code sync vs UI-authored definitions:** When a workflow is owned by the Filament definition resource (`source = ui`), code sync stores new versions as history but does not replace the UI workflow's active version pointer. Hosts using code-first pilots often disable `enable_workflow_definition_resource` or treat the resource as read-only ops tooling. See [docs/workflow-definitions.md](docs/workflow-definitions.md).
+> **Code sync vs UI-authored definitions:** When a workflow is owned by the Filament definition resource (`source = ui`), code sync stores new versions as history but does not replace the UI workflow's active version pointer. Hosts using code-first pilots often disable `enable_workflow_definition_resource` or treat the resource as read-only ops tooling. See the Core [Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md).
 
 ### Assignee configuration (Core runtime)
 
@@ -306,11 +309,14 @@ Then edit `config/dbflow-filament.php`.
 | `panel_registration_mode` | `DBFLOW_FILAMENT_PANEL_REGISTRATION` | `explicit` | `explicit` (register via `DBFlowFilamentPanel`) or `disabled` |
 | `enable_my_tasks_page` | `DBFLOW_FILAMENT_MY_TASKS` | `true` | My Workflow Tasks page |
 | `enable_my_task_actions` | `DBFLOW_FILAMENT_MY_TASK_ACTIONS` | `true` | Approve/reject actions on the tasks page |
+| `enable_my_task_reassign_action` | `DBFLOW_FILAMENT_MY_TASK_REASSIGN` | `true` | Reassign action on the tasks page |
 | `enable_workflow_instances_page` | `DBFLOW_FILAMENT_INSTANCES` | `true` | Instance list and detail pages |
+| `enable_instance_cancel_action` | `DBFLOW_FILAMENT_INSTANCE_CANCEL` | `true` | Cancel workflow header action on instance detail |
 | `enable_workflow_definition_resource` | `DBFLOW_FILAMENT_DEFINITIONS` | `true` | Workflow Definition resource |
 | `enable_logs_timeline` | `DBFLOW_FILAMENT_LOGS_TIMELINE` | `true` | Audit timeline on instance detail |
 | `require_reject_note` | `DBFLOW_FILAMENT_REQUIRE_REJECT_NOTE` | `true` | Require a note when rejecting from the tasks UI |
 | `reject_strategy` | `DBFLOW_FILAMENT_REJECT_STRATEGY` | `end` | Core `RejectTask` strategy (see below) |
+| `open_workflowable_links_in_new_tab` | `DBFLOW_FILAMENT_OPEN_WORKFLOWABLE_IN_NEW_TAB` | `false` | Open subject links in a new browser tab |
 
 `reject_strategy` accepts Core `RejectStrategy` values:
 
@@ -332,6 +338,15 @@ Then edit `config/dbflow-filament.php`.
 | `route_name_prefix` | — | `dbflow.filament.` | Named route prefix |
 | `middleware` | — | `[]` | Extra middleware for package pages |
 
+### Presentation
+
+| Key | Env (optional) | Default | Purpose |
+| --- | -------------- | ------- | ------- |
+| `user_model` | — | `null` | Optional Eloquent model for display-only user lookups (falls back to Core auth config) |
+| `user_name_attribute` | — | `name` | Attribute used for user display names |
+| `date_time_format` | — | `Y-m-d H:i:s` | Date/time format for tables and timelines |
+| `table_polling_interval` | — | `null` | Optional Livewire polling interval for task/instance tables |
+
 ### Class overrides
 
 | Key | Purpose |
@@ -350,7 +365,7 @@ Then edit `config/dbflow-filament.php`.
 
 ### Legacy permission config keys
 
-Nested abilities under `permissions.tasks`, `permissions.workflow_instances`, and `permissions.definitions` are canonical. Flat keys (`my_tasks`, `approve_task`, `reject_task`, …) remain for backward compatibility. If you rename abilities in config, your `PermissionChecker` receives the **resolved** strings from `WorkflowFilamentPermissions::ability()`.
+Nested abilities under `permissions.tasks`, `permissions.workflow_instances`, and `permissions.definitions` are canonical. Flat keys (`my_tasks`, `approve_task`, `reject_task`, `reassign_task`, `cancel_workflow_instance`, …) remain for backward compatibility. If you rename abilities in config, your `PermissionChecker` receives the **resolved** strings from `WorkflowFilamentPermissions::ability()`.
 
 Prefer `*_class` contract bindings over legacy callables (`permission_checker`, `workflowable_label_resolver`, `status_badge_mapper`) in `config/dbflow-filament.php`.
 
@@ -364,7 +379,7 @@ Production applications should replace the default support implementations with 
 | `UserDisplayResolver` | `user_display_resolver_class` | Display names for timeline actors and assignees |
 | `WorkflowableLabelResolver` | `workflowable_label_resolver_class` | Subject labels in instance lists and detail pages |
 | `StatusBadgeMapper` | `status_badge_mapper_class` | Filament badge labels and colors (`labelFor` / `colorFor`) |
-| `UserAssigneeOptionsResolver` | `user_assignee_options_resolver_class` | User picker options in definition editors |
+| `UserAssigneeOptionsResolver` | `user_assignee_options_resolver_class` | User picker options in definition editors and reassign target dropdowns |
 | `PermissionAssigneeOptionsResolver` | `permission_assignee_options_resolver_class` | Labels for permission-style assignee keys in the definition editor |
 | `WorkflowDefinitionEditorResolver` | `workflow_definition_editor_resolver` | Replace the standard linear approval form editor |
 
@@ -380,8 +395,10 @@ Default ability names use the `dbflow.*` namespace:
 dbflow.tasks.view
 dbflow.tasks.approve
 dbflow.tasks.reject
+dbflow.tasks.reassign
 dbflow.workflow_instances.view
 dbflow.workflow_instances.view_any
+dbflow.workflow_instances.cancel
 dbflow.definitions.view
 dbflow.definitions.create
 dbflow.definitions.update
@@ -432,9 +449,11 @@ final class HostPermissionChecker implements PermissionChecker
         return match ($ability) {
             'dbflow.tasks.view',
             'dbflow.tasks.approve',
-            'dbflow.tasks.reject' => $this->permissions->allows($user, 'workflow.approve'),
+            'dbflow.tasks.reject',
+            'dbflow.tasks.reassign' => $this->permissions->allows($user, 'workflow.approve'),
             'dbflow.workflow_instances.view',
-            'dbflow.workflow_instances.view_any' => $this->permissions->allows($user, 'workflow.view'),
+            'dbflow.workflow_instances.view_any',
+            'dbflow.workflow_instances.cancel' => $this->permissions->allows($user, 'workflow.view'),
             'dbflow.definitions.view',
             'dbflow.definitions.create',
             'dbflow.definitions.update',
@@ -470,24 +489,25 @@ Hosts may replace the editor through `workflow_definition_editor_resolver`. The 
 DbflowLabs\Filament\Contracts\WorkflowDefinitionEditorResolver
 ```
 
-This extension point is also used by Pro integrations to replace the standard form editor with a visual canvas editor. See [docs/workflow-definitions.md](docs/workflow-definitions.md).
+This extension point is also used by Pro integrations to replace the standard form editor with a visual canvas editor. See the Core [Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md).
 
 ## End-to-end integration checklist
 
 Use this list to verify a working stack (UI + runtime):
 
-1. `composer require` Filament + Core alpha packages (with `@alpha` when needed).
+1. `composer require dbflowlabs/filament:^1.0` (installs `dbflowlabs/core` `^1.0` automatically).
 2. `php artisan migrate` — `dbflow_*` tables exist.
 3. Publish and set `DBFLOW_AUTH_MODEL` in Core config.
 4. Publish `dbflow-filament-config` and set `permission_checker_class` (**not** the default allow-all checker).
-5. Register `DBFlowFilamentPanel::register($panel)` when your host feature flag is on.
-6. Register `WorkflowDefinitionProvider`(s), assignee resolvers, and optional `WorkflowHooks` in a service provider.
-7. Run `SyncWorkflowDefinitions::handle()` (or your wrapper) so published workflows exist in the database.
-8. From host business code, call `DBFlow::start($workflowKey, $model, $actor)` when a document is submitted.
-9. Log in as an assignee → open **My Workflow Tasks** → approve or reject.
-10. Confirm host business guards (for example "confirm order") respect completed workflow state.
+5. Register `UserAssigneeOptionsResolver` when exposing reassign (and for definition editor user pickers).
+6. Register `DBFlowFilamentPanel::register($panel)` when your host feature flag is on.
+7. Register `WorkflowDefinitionProvider`(s), assignee resolvers, and optional `WorkflowHooks` in a service provider.
+8. Run `SyncWorkflowDefinitions::handle()` (or your wrapper) so published workflows exist in the database.
+9. From host business code, call `DBFlow::start($workflowKey, $model, $actor)` when a document is submitted.
+10. Log in as an assignee → open **My Workflow Tasks** → approve, reject, or reassign.
+11. Confirm host business guards (for example "confirm order") respect completed workflow state.
 
-Filament-only steps (4–5, 9) do not replace Core steps (6–8).
+Filament-only steps (4–6, 10) do not replace Core steps (7–9).
 
 ## Troubleshooting
 
@@ -502,13 +522,17 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 | Definitions UI empty | Not synced / not created | Run sync or create a draft via `WorkflowResource` |
 | Everyone can approve | Default permission checker | Replace `AllowAllPermissionChecker` |
 | UI shows but actions fail | Core disabled / auth model | `DBFLOW_AUTH_MODEL`, Core logs; Filament does not gate on `dbflow.enabled` |
+| No Reassign button | Toggle or permission | `enable_my_task_reassign_action`, `dbflow.tasks.reassign` in `PermissionChecker` |
+| No Cancel button on instance detail | Toggle or permission | `enable_instance_cancel_action`, `dbflow.workflow_instances.cancel` in `PermissionChecker` |
+| Reassign dropdown empty | Missing user resolver | Implement `UserAssigneeOptionsResolver` |
+| Task page banner, no action buttons | Core runtime disabled | Expected when `DBFLOW_ENABLED=false`; sync/validate still work |
 
 ## Typical integration flow
 
 1. Install `dbflowlabs/core` and `dbflowlabs/filament` (see [Installation](#installation)).
 2. Run `php artisan migrate`.
 3. Publish Core + Filament configuration; set `DBFLOW_AUTH_MODEL`.
-4. Replace `permission_checker_class` and other extension contracts.
+4. Replace `permission_checker_class`, `UserAssigneeOptionsResolver`, and other extension contracts.
 5. Register `DBFlowFilamentPanel::register($panel)` behind your host feature flag.
 6. Register workflow definitions, assignee resolvers, and hooks; sync definitions to the database.
 7. Trigger `DBFlow::start()` from host business actions; guard downstream operations until workflows complete.
@@ -522,11 +546,12 @@ Filament-only steps (4–5, 9) do not replace Core steps (6–8).
 
 - Explicit host opt-in panel registration
 - Configurable feature toggles per surface
-- My Workflow Tasks page
+- My Workflow Tasks page (approve, reject, reassign; subject links via `WorkflowRouteResolvable`)
 - Workflow Instances page
-- Workflow Instance Detail page
+- Workflow Instance Detail page (audit timeline, optional cancel action)
 - Workflow Definition resource
-- Standard form-based workflow definition editor (optional approval `timeout.due_in` / `on_timeout` from `1.0.0-rc.2`)
+- Standard form-based workflow definition editor (optional approval `timeout.due_in` / `on_timeout`)
+- Runtime-disabled notice when `DBFLOW_ENABLED=false`
 - Extension contracts for auth, labels, users, assignee options, and presentation
 - Integration with Core definitions, versions, instances, tasks, assignments, and logs
 
