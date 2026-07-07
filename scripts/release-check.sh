@@ -19,6 +19,9 @@ fi
 echo "==> composer validate --strict"
 "$COMPOSER_BIN" validate --strict
 
+echo "==> composer cs-check (PHP CS Fixer dry-run)"
+"$COMPOSER_BIN" cs-check
+
 echo "==> Architecture compliance - DBErp leakage"
 if rg "DBErp|PurchaseRequest|DberpPermissionService|PurchaseRequestStatus" src/ config/ lang/en/ resources/ composer.json README.md; then
   echo "Forbidden DBErp terms found in package release paths."

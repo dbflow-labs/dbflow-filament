@@ -27,5 +27,26 @@ return (new PhpCsFixer\Config())
             'location' => 'after_open',
             'separate' => 'both',
         ],
+        'blank_line_after_opening_tag' => true,
+        'blank_line_after_namespace' => true,
+        'blank_lines_before_namespace' => true,
+        'single_line_after_imports' => true,
+        'no_blank_lines_after_class_opening' => true,
+        'single_blank_line_at_eof' => true,
+        'no_extra_blank_lines' => [
+            'tokens' => [
+                'extra',
+                'curly_brace_block',
+                'parenthesis_brace_block',
+                'square_brace_block',
+                'throw',
+                'use',
+                'return',
+                'continue',
+                'break',
+                'case',
+                'default',
+            ],
+        ],
     ])
     ->setFinder($finder);

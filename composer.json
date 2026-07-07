@@ -35,7 +35,9 @@
     "phpunit/phpunit": "^11.5.50"
   },
   "scripts": {
-    "test": "vendor/bin/phpunit"
+    "test": "vendor/bin/phpunit",
+    "cs": "php-cs-fixer fix",
+    "cs-check": "php-cs-fixer fix --dry-run --diff"
   },
   "extra": {
     "laravel": {
