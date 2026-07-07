@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2edfa21fce6434868c9ec58e634b84f",
+    "content-hash": "9cde5002c69809da80d3cc16e44de22c",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -553,16 +553,16 @@
         },
         {
             "name": "dbflowlabs/core",
-            "version": "1.0.0-rc.1",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dbflow-labs/dbflow-core.git",
-                "reference": "8b0d0150be54b2b46659e6cd4cd706a23f70a025"
+                "reference": "22c560f858befbd5093759f98a63bb5249368e6e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dbflow-labs/dbflow-core/zipball/8b0d0150be54b2b46659e6cd4cd706a23f70a025",
-                "reference": "8b0d0150be54b2b46659e6cd4cd706a23f70a025",
+                "url": "https://api.github.com/repos/dbflow-labs/dbflow-core/zipball/22c560f858befbd5093759f98a63bb5249368e6e",
+                "reference": "22c560f858befbd5093759f98a63bb5249368e6e",
                 "shasum": ""
             },
             "require": {
@@ -609,7 +609,7 @@
                 "issues": "https://github.com/dbflow-labs/dbflow-core/issues",
                 "source": "https://github.com/dbflow-labs/dbflow-core"
             },
-            "time": "2026-07-06T19:09:42+00:00"
+            "time": "2026-07-07T14:44:48+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
