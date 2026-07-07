@@ -27,6 +27,7 @@ use DbflowLabs\Filament\Contracts\StatusBadgeMapper;
 use DbflowLabs\Filament\Contracts\UserDisplayResolver;
 use DbflowLabs\Filament\Contracts\WorkflowableLabelResolver;
 use DbflowLabs\Filament\Support\Actions\WorkflowInstanceHeaderActions;
+use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceDetailPresenter;
 use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceTimelinePresenter;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Pages\Page;
