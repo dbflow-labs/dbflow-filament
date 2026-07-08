@@ -14,13 +14,14 @@ DBFlow Filament adds workflow tasks, workflow instances, audit timelines, and fo
 This package is the **standard UI layer** for [`dbflowlabs/core`](https://github.com/dbflow-labs/dbflow-core). It intentionally ships read-only runtime surfaces and form-based definition editing. Visual workflow builders, drag-and-drop canvases, and advanced authoring experiences live in the separate commercial `dbflowlabs/filament-pro` package.
 
 > [!IMPORTANT]
-> **Filament UI is only half of an integration.** You also need Core runtime setup: migrations, user resolution, workflow definitions (code or UI), assignee resolvers, and host business triggers (`DBFlow::start()`). See [End-to-end integration checklist](#end-to-end-integration-checklist) and the [Core README](https://github.com/dbflow-labs/dbflow-core/blob/main/README.md).
+> **Filament UI is only half of an integration.** Seeing navigation and pages does **not** mean approvals will run. You also need Core runtime setup: migrations, user resolution, workflow definitions (code or UI), assignee resolvers, and host business triggers (`DBFlow::start()`). See [Quick start](#quick-start) and [End-to-end integration checklist](#end-to-end-integration-checklist).
 
 > [!WARNING]
 > **Replace the default `AllowAllPermissionChecker` before any shared environment.** Until you set `permission_checker_class` to a host implementation, every authenticated user can access workflow pages and approve/reject tasks.
 
 ## Contents
 
+- [Quick start](#quick-start)
 - [Package overview](#package-overview)
 - [What you get](#what-you-get)
 - [Requirements](#requirements)
@@ -31,10 +32,50 @@ This package is the **standard UI layer** for [`dbflowlabs/core`](https://github
 - [Extension contracts](#extension-contracts)
 - [End-to-end integration checklist](#end-to-end-integration-checklist)
 - [Troubleshooting](#troubleshooting)
-- [Typical integration flow](#typical-integration-flow)
 - [Stable release scope](#stable-release-scope)
+- [Further reading](#further-reading)
 - [Development](#development)
 - [Support](#support)
+
+## Quick start
+
+Integration has two phases. Complete **Phase A** to verify the Filament surfaces mount correctly. Complete **Phase B** before production use.
+
+### Phase A — UI smoke test (Filament surfaces only)
+
+Enough to see **My Workflow Tasks**, **Workflow Instances**, and (optionally) the **Workflow Definitions** resource in your panel. Task lists may be empty until Phase B.
+
+1. `composer require dbflowlabs/filament:^1.0` — installs `dbflowlabs/core` `^1.0` automatically.
+2. `php artisan migrate` — Core migrations load automatically via `DBFlowServiceProvider` (no need to publish migrations in most hosts).
+3. Publish configuration:
+   ```bash
+   php artisan vendor:publish --tag=dbflow-config
+   php artisan vendor:publish --tag=dbflow-filament-config
+   ```
+4. Set the host user model — **required** for Core user resolution (vendor defaults are `null`):
+   ```env
+   DBFLOW_AUTH_MODEL=App\Models\User
+   DBFLOW_AUTH_GUARD=web
+   DBFLOW_AUTH_TABLE=users
+   ```
+   Tip: you may also set defaults in the published `config/dbflow.php` so local `.env` is optional.
+5. Replace `permission_checker_class` in `config/dbflow-filament.php` — see [PermissionChecker example](#permissionchecker-example).
+6. Implement `user_assignee_options_resolver_class` when reassign or user pickers are enabled — see [UserAssigneeOptionsResolver example](#userassigneeoptionsresolver-example).
+7. Register pages from your `PanelProvider` — see [Register with Filament](#register-with-filament).
+8. Log in → confirm the **Workflow** navigation group (or your `DBFLOW_FILAMENT_NAV_GROUP` label) appears.
+
+**Phase A does not require** `WorkflowDefinitionProvider`, `dbflow:sync`, or `DBFlow::start()`.
+
+### Phase B — Production runtime (approvals actually run)
+
+1. Register `WorkflowDefinitionProvider`(s) and any `AssigneeResolver` keys referenced by approval nodes (see [Core prerequisites](#core-prerequisites)).
+2. Run `php artisan dbflow:sync` and `php artisan dbflow:validate --strict`.
+3. Call `DBFlow::start($workflowKey, $model, $actor)` from host business code when a document is submitted.
+4. Implement `HasWorkflow`, `WorkflowRouteResolvable`, and `Workflowable` on host models as needed.
+5. Log in as an assignee → **My Workflow Tasks** → approve, reject, or reassign.
+6. Guard downstream host actions (for example "confirm order") until the workflow completes.
+
+Filament-only steps do **not** replace Core runtime steps. See the full [checklist](#end-to-end-integration-checklist).
 
 ## Package overview
 
@@ -79,18 +120,30 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 ### Packagist (stable)
 
 ```bash
-composer require dbflowlabs/filament
+composer require dbflowlabs/filament:^1.0
 ```
 
 `dbflowlabs/core` is installed automatically as a dependency of this package.
 
 For monorepo development against a local Core worktree, copy `composer.local.json.dist` to `composer.local.json` and use `scripts/merge-composer-local.php` from `dbflowlabs/core` (see Core [UPGRADE-1.0.md](https://github.com/dbflow-labs/dbflow-core/blob/main/UPGRADE-1.0.md)).
 
-### Publish assets
+### After `composer require`
 
-Publish the package configuration:
+| What happens | Action needed |
+| ------------ | ------------- |
+| `dbflowlabs/core` installed | None — pulled in as a dependency |
+| Core migrations registered | Run `php artisan migrate` on your host database |
+| Filament assets upgraded | Composer post-scripts usually run `php artisan filament:upgrade` — no manual step unless your host disables Composer scripts |
+| Package config | Publish when you need host overrides (see below) |
+
+You do **not** need to publish Core migrations (`dbflow-migrations` tag) unless you want migration files copied into `database/migrations/`.
+
+### Publish package files
+
+Publish configuration (recommended for all hosts):
 
 ```bash
+php artisan vendor:publish --tag=dbflow-config
 php artisan vendor:publish --tag=dbflow-filament-config
 ```
 
@@ -108,7 +161,7 @@ php artisan vendor:publish --tag=dbflow-filament-translations
 
 ## Core prerequisites
 
-Filament surfaces read and mutate data through Core. Complete these steps **before** expecting the UI to work.
+Filament surfaces read and mutate data through Core. Complete these steps **before** expecting runtime behaviour (not just empty UI pages).
 
 ### Migrations
 
@@ -118,7 +171,7 @@ Core loads migrations automatically via `DBFlowServiceProvider`. In most host ap
 php artisan migrate
 ```
 
-Publishing Core migrations (`vendor:publish --tag=dbflow-migrations`) is **optional** and only needed when you want migration files copied into `database/migrations/`.
+Verify `dbflow_workflows` exists after migration.
 
 ### Core configuration
 
@@ -128,12 +181,23 @@ Publish Core config when you need to customize auth or runtime flags:
 php artisan vendor:publish --tag=dbflow-config
 ```
 
-Set the host user model explicitly in `.env`:
+Set the host user model explicitly — Core cannot resolve actors or assignees without it:
 
 ```env
 DBFLOW_AUTH_MODEL=App\Models\User
 DBFLOW_AUTH_GUARD=web
 DBFLOW_AUTH_TABLE=users
+```
+
+In published `config/dbflow.php`, hosts may set the same defaults so `.env` is not the only source of truth:
+
+```php
+'auth' => [
+    'model' => env('DBFLOW_AUTH_MODEL', App\Models\User::class),
+    'guard' => env('DBFLOW_AUTH_GUARD', 'web'),
+    'table' => env('DBFLOW_AUTH_TABLE', 'users'),
+    // ...
+],
 ```
 
 Core stores workflow user references (`assignee_user_id`, `started_by_user_id`, `actor_user_id`) as strings. Integer primary keys still work (stored as `"1"`); UUID/ULID primary keys are supported in Core 1.0.
@@ -147,7 +211,15 @@ See the [dbflowlabs/core README](https://github.com/dbflow-labs/dbflow-core/blob
 | `config/dbflow.php` | `enabled` | Core runtime (`DBFLOW_ENABLED=false` disables runtime APIs; definition sync/validate remain available — see Core README) |
 | `config/dbflow-filament.php` | `enabled` | Whether Filament pages/resources are exposed when registered |
 
-`DBFlowFilamentPanel` checks **`dbflow-filament.enabled`** and **`panel_registration_mode`**. It does **not** read `dbflow.enabled`. Hosts that want a single feature flag should wrap both configs in their own toggle.
+`DBFlowFilamentPanel` checks **`dbflow-filament.enabled`** and **`panel_registration_mode`**. It does **not** read `dbflow.enabled`.
+
+**Recommended host pattern:** combine three layers when needed:
+
+1. `config('dbflow.enabled')` — Core runtime on/off
+2. `config('dbflow-filament.enabled')` — package Filament toggle
+3. A host product flag (for example `config('myapp.workflow.filament_enabled')`) — product-level opt-in
+
+Wrap `DBFlowFilamentPanel::register()` behind layers 2 and 3. Layer 1 affects whether approve/reject/reassign actions appear at runtime.
 
 ### Workflow definitions (code-first)
 
@@ -175,7 +247,7 @@ When using the **UI definition editor**, approval steps may optionally set `time
 Core ships official `dbflow:sync` (`--dry-run`, `--workflow=`) and `dbflow:validate` (`--strict`, `--workflow=`, `--source=`) commands. Filament does not bundle its own sync command.
 
 > [!NOTE]
-> **Code sync vs UI-authored definitions:** When a workflow is owned by the Filament definition resource (`source = ui`), code sync stores new versions as history but does not replace the UI workflow's active version pointer. Hosts using code-first pilots often disable `enable_workflow_definition_resource` or treat the resource as read-only ops tooling. See the Core [Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md).
+> **Code sync vs UI-authored definitions:** When a workflow is owned by the Filament definition resource (`source = ui`), code sync stores new versions as history but does not replace the UI workflow's active version pointer. Hosts using code-first pilots often disable `enable_workflow_definition_resource` or treat the resource as read-only ops tooling. See [docs/workflow-definitions.md](docs/workflow-definitions.md) and the Core [Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md).
 
 ### Assignee configuration (Core runtime)
 
@@ -190,6 +262,9 @@ Approval nodes may reference assignees by type:
 Register resolvers during boot:
 
 ```php
+use DbflowLabs\Core\DBFlow;
+use DbflowLabs\Core\Services\AssigneeResolverRegistry;
+
 DBFlow::registerAssigneeResolver(
     app(AssigneeResolverRegistry::class),
     'finance_team',
@@ -241,8 +316,15 @@ final class AdminPanelProvider extends PanelProvider
 
     private function shouldRegisterDbflow(): bool
     {
-        return (bool) config('dbflow-filament.enabled', true);
-        // Hosts often also gate on config('dbflow.enabled') or a product feature flag.
+        if (! (bool) config('dbflow-filament.enabled', true)) {
+            return false;
+        }
+
+        // Optional host product flag — replace with your application's config key.
+        return (bool) config('myapp.workflow.filament_enabled', true);
+
+        // Some hosts also gate Core runtime separately via config('dbflow.enabled').
+        // DBFlowFilamentPanel does not read dbflow.enabled; that flag affects action buttons at runtime.
     }
 }
 ```
@@ -413,6 +495,18 @@ dbflow.definitions.copy
 
 `dbflow.tasks.view` is required for the **My Workflow Tasks** navigation item and page access.
 
+**Recommended host mapping groups** (adjust to your RBAC granularity):
+
+| DBFlow abilities | Typical host permission |
+| ---------------- | ----------------------- |
+| `dbflow.tasks.view` | View task inbox |
+| `dbflow.tasks.approve`, `reject`, `reassign` | Operate on assigned tasks |
+| `dbflow.workflow_instances.view`, `view_any` | View workflow instances |
+| `dbflow.workflow_instances.cancel` | Cancel running instances |
+| `dbflow.definitions.*` | Manage workflow definitions |
+
+Do not collapse view and operate into a single host permission unless your product intentionally uses one role for both.
+
 ### PermissionChecker example
 
 Map DBFlow ability strings to your host permission system. Do **not** assume Laravel Gate policies exist for `dbflow.*` unless you register them.
@@ -447,13 +541,13 @@ final class HostPermissionChecker implements PermissionChecker
         }
 
         return match ($ability) {
-            'dbflow.tasks.view',
+            'dbflow.tasks.view' => $this->permissions->allows($user, 'workflow.tasks.view'),
             'dbflow.tasks.approve',
             'dbflow.tasks.reject',
-            'dbflow.tasks.reassign' => $this->permissions->allows($user, 'workflow.approve'),
+            'dbflow.tasks.reassign' => $this->permissions->allows($user, 'workflow.tasks.operate'),
             'dbflow.workflow_instances.view',
-            'dbflow.workflow_instances.view_any',
-            'dbflow.workflow_instances.cancel' => $this->permissions->allows($user, 'workflow.view'),
+            'dbflow.workflow_instances.view_any' => $this->permissions->allows($user, 'workflow.instances.view'),
+            'dbflow.workflow_instances.cancel' => $this->permissions->allows($user, 'workflow.instances.cancel'),
             'dbflow.definitions.view',
             'dbflow.definitions.create',
             'dbflow.definitions.update',
@@ -463,12 +557,68 @@ final class HostPermissionChecker implements PermissionChecker
             'dbflow.definitions.disable',
             'dbflow.definitions.enable',
             'dbflow.definitions.archive',
-            'dbflow.definitions.copy' => $this->permissions->allows($user, 'system.settings'),
+            'dbflow.definitions.copy' => $this->permissions->allows($user, 'workflow.definitions.manage'),
             default => false,
         };
     }
 }
 ```
+
+Replace `workflow.tasks.view`, `workflow.tasks.operate`, and the other host codes with your application's real permission identifiers.
+
+### UserAssigneeOptionsResolver example
+
+Required when `enable_my_task_reassign_action` is on, or when authors pick direct user assignees in the definition editor. Without a host implementation, reassign dropdowns and user pickers stay empty.
+
+```php
+// config/dbflow-filament.php
+
+'user_assignee_options_resolver_class' => \App\Filament\Workflow\HostUserAssigneeOptionsResolver::class,
+'user_model' => App\Models\User::class, // optional; falls back to Core auth model
+```
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Workflow;
+
+use App\Models\User;
+use DbflowLabs\Filament\Contracts\UserAssigneeOptionsResolver;
+use Illuminate\Database\Eloquent\Model;
+
+final class HostUserAssigneeOptionsResolver implements UserAssigneeOptionsResolver
+{
+    /**
+     * @return array<string, string>
+     */
+    public function options(): array
+    {
+        $modelClass = config('dbflow-filament.user_model') ?? config('dbflow.auth.model');
+
+        if (! is_string($modelClass) || ! class_exists($modelClass) || ! is_subclass_of($modelClass, Model::class)) {
+            return [];
+        }
+
+        $nameAttribute = (string) config('dbflow-filament.user_name_attribute', 'name');
+
+        return $modelClass::query()
+            ->orderBy($nameAttribute)
+            ->get(['id', $nameAttribute, 'email'])
+            ->mapWithKeys(function (Model $user) use ($nameAttribute): array {
+                $label = filled($user->{$nameAttribute} ?? null)
+                    ? (string) $user->{$nameAttribute}
+                    : (string) ($user->email ?? $user->getKey());
+
+                return [(string) $user->getKey() => $label];
+            })
+            ->all();
+    }
+}
+```
+
+Filter to enabled/active users if your host model has a status column.
 
 ### PermissionAssigneeOptionsResolver vs Core assignee resolvers
 
@@ -495,48 +645,43 @@ This extension point is also used by Pro integrations to replace the standard fo
 
 Use this list to verify a working stack (UI + runtime):
 
-1. `composer require dbflowlabs/filament:^1.0` (installs `dbflowlabs/core` `^1.0` automatically).
-2. `php artisan migrate` — `dbflow_*` tables exist.
-3. Publish and set `DBFLOW_AUTH_MODEL` in Core config.
-4. Publish `dbflow-filament-config` and set `permission_checker_class` (**not** the default allow-all checker).
-5. Register `UserAssigneeOptionsResolver` when exposing reassign (and for definition editor user pickers).
-6. Register `DBFlowFilamentPanel::register($panel)` when your host feature flag is on.
-7. Register `WorkflowDefinitionProvider`(s), assignee resolvers, and optional `WorkflowHooks` in a service provider.
-8. Run `SyncWorkflowDefinitions::handle()` (or your wrapper) so published workflows exist in the database.
-9. From host business code, call `DBFlow::start($workflowKey, $model, $actor)` when a document is submitted.
-10. Log in as an assignee → open **My Workflow Tasks** → approve, reject, or reassign.
-11. Confirm host business guards (for example "confirm order") respect completed workflow state.
+### Filament / UI (Phase A)
 
-Filament-only steps (4–6, 10) do not replace Core steps (7–9).
+1. `composer require dbflowlabs/filament:^1.0`
+2. `php artisan migrate` — `dbflow_*` tables exist
+3. Publish `dbflow-config` and `dbflow-filament-config`; set `DBFLOW_AUTH_MODEL` (or defaults in config)
+4. Set `permission_checker_class` (**not** `AllowAllPermissionChecker`)
+5. Set `user_assignee_options_resolver_class` when reassign or user assignee pickers are enabled
+6. Call `DBFlowFilamentPanel::register($panel)` behind `dbflow-filament.enabled` and any host product flag
+7. Log in → navigation group visible → pages load without 404
+
+### Core runtime (Phase B)
+
+8. Register `WorkflowDefinitionProvider`(s), assignee resolvers, and optional `WorkflowHooks`
+9. Run `php artisan dbflow:sync` and `php artisan dbflow:validate --strict` (or `SyncWorkflowDefinitions::handle()`)
+10. Call `DBFlow::start($workflowKey, $model, $actor)` from host business code on submit
+11. Log in as an assignee → **My Workflow Tasks** → approve, reject, or reassign
+12. Confirm host business guards respect completed workflow state
+
+Steps 1–7 alone do **not** produce runnable approvals.
 
 ## Troubleshooting
 
 | Symptom | Likely cause | What to check |
 | ------- | ------------ | ------------- |
-| No "Workflow" navigation group | Panel not registered or Filament disabled | `DBFlowFilamentPanel::register()`, `dbflow-filament.enabled`, `panel_registration_mode !== disabled` |
+| No "Workflow" navigation group | Panel not registered or Filament disabled | `DBFlowFilamentPanel::register()`, `dbflow-filament.enabled`, host product flag, `panel_registration_mode !== disabled` |
 | Navigation missing but routes work | Permission mapping | `PermissionChecker` must allow `dbflow.tasks.view` for the current user |
-| Empty task list after submit | Assignee resolution | Resolver registered? Resolver returns user ids? Current user in assignee set? |
+| Pages 404 after deploy | Panel path mismatch | Compare `{panel_path}/{route_prefix}/…` with your `Panel::path()` |
+| Empty task list after submit | Assignee resolution / workflow not started | Resolver registered? `DBFlow::start()` called? Current user in assignee set? |
 | `Unknown assignee resolver` on start | Missing Core registration | `DBFlow::registerAssigneeResolver()` for each `permission` / `callback` key in the definition |
 | Workflow tables missing | Migrations not run | `php artisan migrate`; verify `dbflow_workflows` exists |
-| 404 on package URLs | Panel path mismatch | Compare `{panel_path}/{route_prefix}/…` with your `Panel::path()` |
 | Definitions UI empty | Not synced / not created | Run sync or create a draft via `WorkflowResource` |
 | Everyone can approve | Default permission checker | Replace `AllowAllPermissionChecker` |
-| UI shows but actions fail | Core disabled / auth model | `DBFLOW_AUTH_MODEL`, Core logs; Filament does not gate on `dbflow.enabled` |
+| UI shows but actions fail | Core disabled / auth model unset | `DBFLOW_AUTH_MODEL`, Core logs; Filament does not gate on `dbflow.enabled` for page access |
 | No Reassign button | Toggle or permission | `enable_my_task_reassign_action`, `dbflow.tasks.reassign` in `PermissionChecker` |
 | No Cancel button on instance detail | Toggle or permission | `enable_instance_cancel_action`, `dbflow.workflow_instances.cancel` in `PermissionChecker` |
 | Reassign dropdown empty | Missing user resolver | Implement `UserAssigneeOptionsResolver` |
 | Task page banner, no action buttons | Core runtime disabled | Expected when `DBFLOW_ENABLED=false`; sync/validate still work |
-
-## Typical integration flow
-
-1. Install `dbflowlabs/core` and `dbflowlabs/filament` (see [Installation](#installation)).
-2. Run `php artisan migrate`.
-3. Publish Core + Filament configuration; set `DBFLOW_AUTH_MODEL`.
-4. Replace `permission_checker_class`, `UserAssigneeOptionsResolver`, and other extension contracts.
-5. Register `DBFlowFilamentPanel::register($panel)` behind your host feature flag.
-6. Register workflow definitions, assignee resolvers, and hooks; sync definitions to the database.
-7. Trigger `DBFlow::start()` from host business actions; guard downstream operations until workflows complete.
-8. Open the Filament panel and verify tasks, instances, detail, and (if enabled) definition surfaces.
 
 ## Stable release scope
 
@@ -564,6 +709,13 @@ Filament-only steps (4–6, 10) do not replace Core steps (7–9).
 - Production SLA
 
 Visual authoring belongs to the separate commercial `dbflowlabs/filament-pro` package.
+
+## Further reading
+
+- [docs/workflow-definitions.md](docs/workflow-definitions.md) — Standard definition resource and editor behaviour
+- [Core README](https://github.com/dbflow-labs/dbflow-core/blob/main/README.md) — Runtime API, hooks, and host checklist
+- [Core Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md) — Cross-package contract (queries, events, `WorkflowRouteResolvable`)
+- [CHANGELOG.md](CHANGELOG.md) — Version history and upgrade notes
 
 ## Development
 
