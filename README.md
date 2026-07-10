@@ -7,6 +7,8 @@
 [![Laravel](https://img.shields.io/badge/laravel-13.x-ff2d20.svg)](composer.json)
 [![Filament](https://img.shields.io/badge/filament-5.x-f59e0b.svg)](composer.json)
 
+[View on Filament Plugins Directory](https://filamentphp.com/plugins/dbflow-labs-dbflow)
+
 **Standard Filament integration for DBFlow Core.**
 
 DBFlow Filament adds workflow tasks, workflow instances, audit timelines, and form-based workflow definition management to Laravel admin panels built with [Filament](https://filamentphp.com/).
