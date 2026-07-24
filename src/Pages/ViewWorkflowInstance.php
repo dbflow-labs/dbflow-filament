@@ -22,13 +22,15 @@ use DbflowLabs\Core\Models\WorkflowInstance;
 use DbflowLabs\Core\Models\WorkflowTask;
 use DbflowLabs\Core\Models\WorkflowTaskAssignment;
 use DbflowLabs\Core\Support\WorkflowDefinitionDisplay;
-use DbflowLabs\Filament\Contracts\PermissionChecker;
 use DbflowLabs\Filament\Contracts\StatusBadgeMapper;
 use DbflowLabs\Filament\Contracts\UserDisplayResolver;
 use DbflowLabs\Filament\Contracts\WorkflowableLabelResolver;
 use DbflowLabs\Filament\Support\Actions\WorkflowInstanceHeaderActions;
+use DbflowLabs\Filament\Support\Presenters\DueDatePresenter;
 use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceDetailPresenter;
+use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceRuntimePresenter;
 use DbflowLabs\Filament\Support\Presenters\WorkflowInstanceTimelinePresenter;
+use DbflowLabs\Filament\Support\RuntimeCapabilityGate;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -78,7 +80,7 @@ class ViewWorkflowInstance extends Page
                 'workflow',
                 'workflowVersion',
                 'startedBy',
-                'tasks.assignments.assignee',
+                'tasks.assignments.delegation',
             ])
             ->findOrFail($record);
     }
@@ -187,12 +189,13 @@ class ViewWorkflowInstance extends Page
         $presenter = app(WorkflowInstanceDetailPresenter::class);
         $statusBadgeMapper = app(StatusBadgeMapper::class);
         $workflowDefinitionDisplay = app(WorkflowDefinitionDisplay::class);
+        $dueDatePresenter = app(DueDatePresenter::class);
         $workflowKey = $this->instance->workflow?->key;
 
         return $this->instance->tasks
             ->sortBy('id')
             ->values()
-            ->map(function (WorkflowTask $task) use ($presenter, $statusBadgeMapper, $workflowDefinitionDisplay, $workflowKey): array {
+            ->map(function (WorkflowTask $task) use ($presenter, $statusBadgeMapper, $workflowDefinitionDisplay, $dueDatePresenter, $workflowKey): array {
                 $comment = $presenter->taskComment($task);
                 $statusValue = $task->status !== null
                     ? (is_object($task->status) && property_exists($task->status, 'value')
@@ -204,6 +207,8 @@ class ViewWorkflowInstance extends Page
                     'node_key' => $workflowDefinitionDisplay->nodeLabel($workflowKey, $task->node_key, $task->node_name),
                     'status' => $statusValue !== null ? $statusBadgeMapper->labelFor($statusValue) : '—',
                     'assigned_at' => $this->formatDateTime($presenter->taskAssignedAt($task)),
+                    'due_at' => $dueDatePresenter->formatDateTime($task->due_at),
+                    'time_remaining' => $dueDatePresenter->remainingLabel($task) ?? '—',
                     'completed_at' => $this->formatDateTime($task->completed_at),
                     'result_comment' => $comment ?? ($statusValue !== null ? $statusBadgeMapper->labelFor($statusValue) : '—'),
                 ];
@@ -276,6 +281,76 @@ class ViewWorkflowInstance extends Page
         return app(WorkflowInstanceTimelinePresenter::class)->timelineForInstance($this->instance);
     }
 
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, string>>
+     */
+    public function assignmentHistoryForDisplay(): \Illuminate\Support\Collection
+    {
+        if ($this->instance === null) {
+            return collect();
+        }
+
+        return app(WorkflowInstanceRuntimePresenter::class)->assignmentHistory($this->instance);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, string>>
+     */
+    public function slaEventsForDisplay(): \Illuminate\Support\Collection
+    {
+        if ($this->instance === null) {
+            return collect();
+        }
+
+        if (! app(RuntimeCapabilityGate::class)->slaVisible()) {
+            return collect();
+        }
+
+        if (! WorkflowFilamentPermissions::can('sla_events', 'view')) {
+            return collect();
+        }
+
+        return app(WorkflowInstanceRuntimePresenter::class)->slaEvents($this->instance);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, string>>
+     */
+    public function actionExecutionsForDisplay(): \Illuminate\Support\Collection
+    {
+        if ($this->instance === null) {
+            return collect();
+        }
+
+        if (! app(RuntimeCapabilityGate::class)->reliableActionVisible()) {
+            return collect();
+        }
+
+        if (! WorkflowFilamentPermissions::can('action_executions', 'view_any')) {
+            return collect();
+        }
+
+        return app(WorkflowInstanceRuntimePresenter::class)->actionExecutions($this->instance);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function actionExecutionColumnsForDisplay(): array
+    {
+        $columns = __('dbflow-filament::dbflow-filament.pages.view_instance.action_executions');
+
+        if (! is_array($columns)) {
+            return [];
+        }
+
+        if (! app(WorkflowInstanceRuntimePresenter::class)->canViewWebhookMetadata()) {
+            unset($columns['destination']);
+        }
+
+        return $columns;
+    }
+
     public static function getNavigationGroup(): string|UnitEnum|null
     {
         $configured = config('dbflow-filament.navigation_group');
@@ -328,14 +403,6 @@ class ViewWorkflowInstance extends Page
 
     protected function formatDateTime(mixed $value): string
     {
-        if ($value === null) {
-            return '—';
-        }
-
-        if ($value instanceof \DateTimeInterface) {
-            return $value->format((string) config('dbflow-filament.date_time_format', 'Y-m-d H:i:s'));
-        }
-
-        return '—';
+        return app(DueDatePresenter::class)->formatDateTime($value);
     }
 }

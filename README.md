@@ -47,7 +47,7 @@ Integration has two phases. Complete **Phase A** to verify the Filament surfaces
 
 Enough to see **My Workflow Tasks**, **Workflow Instances**, and (optionally) the **Workflow Definitions** resource in your panel. Task lists may be empty until Phase B.
 
-1. `composer require dbflowlabs/filament:^1.0` — installs `dbflowlabs/core` `^1.0` automatically.
+1. `composer require dbflowlabs/filament:^1.1` — installs `dbflowlabs/core` `^1.1` automatically.
 2. `php artisan migrate` — Core migrations load automatically via `DBFlowServiceProvider` (no need to publish migrations in most hosts).
 3. Publish configuration:
    ```bash
@@ -85,11 +85,11 @@ Filament-only steps do **not** replace Core runtime steps. See the full [checkli
 | --------------- | ------------------------------------------------------------------------------------ |
 | Composer name   | `dbflowlabs/filament`                                                                |
 | Namespace       | `DbflowLabs\Filament`                                                                |
-| Current stable  | `1.0.0`                                                                              |
-| First release   | `0.1.0-alpha.1`                                                                      |
+| Current stable  | `1.1.0`                                                                              |
+| First tagged    | `0.1.0-alpha.1`                                                                      |
 | License         | MIT                                                                                  |
 | Author          | Baron Wang [hello@dbflow.dev](mailto:hello@dbflow.dev)                               |
-| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^1.0` |
+| Core dependency | [dbflowlabs/core](https://packagist.org/packages/dbflowlabs/core) `^1.1` (use `^1.0` with Filament `^1.0`) |
 | Filament        | `^5.6`                                                                               |
 | PHP             | `^8.3`                                                                               |
 | Host framework  | Laravel 13.x                                                                         |
@@ -102,6 +102,8 @@ Filament-only steps do **not** replace Core runtime steps. See the full [checkli
 | **Workflow Instances**       | Searchable runtime workflow instance list                                            |
 | **Workflow Instance Detail** | Instance detail with audit timeline (including `task_reassigned` / `task_timed_out` events) and optional cancel action |
 | **Workflow Definitions**     | Filament resource for draft CRUD, validation, and publishing                         |
+| **Delegations** (v1.1)       | Read-only delegation list when delegation capability is enabled                      |
+| **Action Executions** (v1.1) | Read-only reliable-action execution list and detail when capability is enabled       |
 | **Extension Contracts**      | Host adapters for permissions, labels, status badges, users, and assignee options    |
 
 When `DBFLOW_ENABLED=false`, task approve/reject/reassign and instance cancel actions are hidden and a runtime-disabled notice is shown on **My Workflow Tasks** (definition sync/validate remain available through Core).
@@ -113,7 +115,8 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 - PHP `^8.3`
 - Laravel 13.x
 - Filament `^5.6`
-- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^1.0`
+- [`dbflowlabs/core`](https://packagist.org/packages/dbflowlabs/core) `^1.1` for this branch (`^1.0` remains valid for the 1.0 integration line)
+- **MySQL `8.0` or later** for production (v1.1 stable certification target); SQLite for development and package tests
 - Core database migrations applied (`php artisan migrate`)
 - Host user model configured in Core (`DBFLOW_AUTH_MODEL`, see [Core prerequisites](#core-prerequisites))
 
@@ -122,10 +125,10 @@ Hosts opt in explicitly. This package does **not** auto-register Filament pages 
 ### Packagist (stable)
 
 ```bash
-composer require dbflowlabs/filament:^1.0
+composer require dbflowlabs/filament:^1.1
 ```
 
-`dbflowlabs/core` is installed automatically as a dependency of this package.
+`dbflowlabs/core` is installed automatically as a dependency of this package. For the 1.0 integration line, pin `^1.0` on both packages.
 
 For monorepo development against a local Core worktree, copy `composer.local.json.dist` to `composer.local.json` and use `scripts/merge-composer-local.php` from `dbflowlabs/core` (see Core [UPGRADE-1.0.md](https://github.com/dbflow-labs/dbflow-core/blob/main/UPGRADE-1.0.md)).
 
@@ -333,12 +336,15 @@ final class AdminPanelProvider extends PanelProvider
 
 When the corresponding feature toggles are enabled, registration exposes:
 
-| Surface                  | Class                                            |
-| ------------------------ | ------------------------------------------------ |
-| My Workflow Tasks        | `DbflowLabs\Filament\Pages\MyWorkflowTasks`      |
-| Workflow Instances       | `DbflowLabs\Filament\Pages\WorkflowInstances`    |
-| Workflow Instance Detail | `DbflowLabs\Filament\Pages\ViewWorkflowInstance` |
-| Workflow Definitions     | `DbflowLabs\Filament\Resources\WorkflowResource` |
+| Surface                  | Class                                                         |
+| ------------------------ | ------------------------------------------------------------- |
+| My Workflow Tasks        | `DbflowLabs\Filament\Pages\MyWorkflowTasks`                   |
+| Workflow Instances       | `DbflowLabs\Filament\Pages\WorkflowInstances`                 |
+| Workflow Instance Detail | `DbflowLabs\Filament\Pages\ViewWorkflowInstance`              |
+| Workflow Definitions     | `DbflowLabs\Filament\Resources\WorkflowResource`              |
+| Delegations (v1.1)       | `DbflowLabs\Filament\Pages\WorkflowDelegations`               |
+| Action Executions (v1.1) | `DbflowLabs\Filament\Pages\WorkflowActionExecutions`          |
+| Action Execution Detail  | `DbflowLabs\Filament\Pages\ViewWorkflowActionExecution`       |
 
 ### Routes and panel path
 
@@ -348,6 +354,9 @@ Package pages use slugs shaped like:
 {panel_path}/{route_prefix}/my-workflow-tasks
 {panel_path}/{route_prefix}/workflow-instances
 {panel_path}/{route_prefix}/workflow-instances/{record}
+{panel_path}/{route_prefix}/workflow-delegations
+{panel_path}/{route_prefix}/workflow-action-executions
+{panel_path}/{route_prefix}/workflow-action-executions/{record}
 ```
 
 Defaults: `route_prefix = dbflow`. Examples:
@@ -398,6 +407,10 @@ Then edit `config/dbflow-filament.php`.
 | `enable_instance_cancel_action` | `DBFLOW_FILAMENT_INSTANCE_CANCEL` | `true` | Cancel workflow header action on instance detail |
 | `enable_workflow_definition_resource` | `DBFLOW_FILAMENT_DEFINITIONS` | `true` | Workflow Definition resource |
 | `enable_logs_timeline` | `DBFLOW_FILAMENT_LOGS_TIMELINE` | `true` | Audit timeline on instance detail |
+| `enable_delegations_page` | `DBFLOW_FILAMENT_DELEGATIONS` | `true` | Read-only Delegations page (also requires Core delegation capability) |
+| `enable_action_executions_page` | `DBFLOW_FILAMENT_ACTION_EXECUTIONS` | `true` | Read-only Action Executions pages (also requires Core reliable-action capability) |
+| `due_soon_hours` | `DBFLOW_FILAMENT_DUE_SOON_HOURS` | `24` | Hours before due used for “due soon” badges |
+| `runtime_detail_limit` | `DBFLOW_FILAMENT_RUNTIME_DETAIL_LIMIT` | `100` | Max related runtime rows on instance detail summaries |
 | `require_reject_note` | `DBFLOW_FILAMENT_REQUIRE_REJECT_NOTE` | `true` | Require a note when rejecting from the tasks UI |
 | `reject_strategy` | `DBFLOW_FILAMENT_REJECT_STRATEGY` | `end` | Core `RejectTask` strategy (see below) |
 | `open_workflowable_links_in_new_tab` | `DBFLOW_FILAMENT_OPEN_WORKFLOWABLE_IN_NEW_TAB` | `false` | Open subject links in a new browser tab |
@@ -438,18 +451,34 @@ Then edit `config/dbflow-filament.php`.
 | `my_workflow_tasks_page_class` | Subclass `MyWorkflowTasks` |
 | `workflow_instances_page_class` | Subclass `WorkflowInstances` |
 | `view_workflow_instance_page_class` | Subclass `ViewWorkflowInstance` |
+| `workflow_delegations_page_class` | Subclass `WorkflowDelegations` (Pro substitution hook) |
+| `workflow_action_executions_page_class` | Subclass `WorkflowActionExecutions` |
+| `view_workflow_action_execution_page_class` | Subclass `ViewWorkflowActionExecution` (Pro substitution hook) |
 | `workflow_resource_class` | Subclass `WorkflowResource` |
 | `workflow_definition_editor_resolver` | Replace the standard form editor (`WorkflowDefinitionEditorResolver`) |
 
 ### Internationalization
 
+Built-in locales (Laravel `lang/{locale}/dbflow-filament.php`):
+
+| Locale | Language |
+| --- | --- |
+| `en` | English |
+| `zh_CN` | Simplified Chinese |
+| `zh_TW` | Traditional Chinese |
+| `ja` | Japanese |
+| `fr` | French |
+| `de` | German |
+| `es` | Spanish |
+| `pt_BR` | Brazilian Portuguese |
+
 - Package strings live under `lang/vendor/dbflow-filament` when published, or in the package `lang/` directory by default.
 - `navigation_group` falls back to `__('dbflow-filament::dbflow-filament.navigation.group')` when empty.
-- Hosts targeting non-English panels should set `DBFLOW_FILAMENT_NAV_GROUP` or publish and override translations.
+- Hosts targeting non-English panels should set the application/panel locale (for example `zh_CN` or `pt_BR`), or set `DBFLOW_FILAMENT_NAV_GROUP` / publish and override translations.
 
 ### Legacy permission config keys
 
-Nested abilities under `permissions.tasks`, `permissions.workflow_instances`, and `permissions.definitions` are canonical. Flat keys (`my_tasks`, `approve_task`, `reject_task`, `reassign_task`, `cancel_workflow_instance`, …) remain for backward compatibility. If you rename abilities in config, your `PermissionChecker` receives the **resolved** strings from `WorkflowFilamentPermissions::ability()`.
+Nested abilities under `permissions.tasks`, `permissions.workflow_instances`, `permissions.definitions`, `permissions.delegations`, `permissions.sla_events`, `permissions.action_executions`, `permissions.action_attempts`, and `permissions.webhook_metadata` are canonical. Flat keys (`my_tasks`, `approve_task`, `reject_task`, `reassign_task`, `cancel_workflow_instance`, …) remain for backward compatibility. If you rename abilities in config, your `PermissionChecker` receives the **resolved** strings from `WorkflowFilamentPermissions::ability()`.
 
 Prefer `*_class` contract bindings over legacy callables (`permission_checker`, `workflowable_label_resolver`, `status_badge_mapper`) in `config/dbflow-filament.php`.
 
@@ -493,9 +522,15 @@ dbflow.definitions.disable
 dbflow.definitions.enable
 dbflow.definitions.archive
 dbflow.definitions.copy
+dbflow.delegations.view_any
+dbflow.sla_events.view
+dbflow.action_executions.view_any
+dbflow.action_executions.view
+dbflow.action_attempts.view
+dbflow.webhook_metadata.view
 ```
 
-`dbflow.tasks.view` is required for the **My Workflow Tasks** navigation item and page access.
+`dbflow.tasks.view` is required for the **My Workflow Tasks** navigation item and page access. It does **not** grant v1.1 operational visibility surfaces (delegations, SLA, action executions).
 
 **Recommended host mapping groups** (adjust to your RBAC granularity):
 
@@ -506,6 +541,11 @@ dbflow.definitions.copy
 | `dbflow.workflow_instances.view`, `view_any` | View workflow instances |
 | `dbflow.workflow_instances.cancel` | Cancel running instances |
 | `dbflow.definitions.*` | Manage workflow definitions |
+| `dbflow.delegations.view_any` | View delegations (read-only) |
+| `dbflow.sla_events.view` | View SLA fields on instance detail |
+| `dbflow.action_executions.view_any`, `view` | View action executions (list / detail) |
+| `dbflow.action_attempts.view` | View attempt history on execution detail |
+| `dbflow.webhook_metadata.view` | View redacted webhook metadata |
 
 Do not collapse view and operate into a single host permission unless your product intentionally uses one role for both.
 
@@ -560,6 +600,12 @@ final class HostPermissionChecker implements PermissionChecker
             'dbflow.definitions.enable',
             'dbflow.definitions.archive',
             'dbflow.definitions.copy' => $this->permissions->allows($user, 'workflow.definitions.manage'),
+            'dbflow.delegations.view_any' => $this->permissions->allows($user, 'workflow.delegations.view'),
+            'dbflow.sla_events.view' => $this->permissions->allows($user, 'workflow.sla.view'),
+            'dbflow.action_executions.view_any',
+            'dbflow.action_executions.view',
+            'dbflow.action_attempts.view' => $this->permissions->allows($user, 'workflow.actions.view'),
+            'dbflow.webhook_metadata.view' => $this->permissions->allows($user, 'workflow.webhooks.view'),
             default => false,
         };
     }
@@ -649,7 +695,7 @@ Use this list to verify a working stack (UI + runtime):
 
 ### Filament / UI (Phase A)
 
-1. `composer require dbflowlabs/filament:^1.0`
+1. `composer require dbflowlabs/filament:^1.1`
 2. `php artisan migrate` — `dbflow_*` tables exist
 3. Publish `dbflow-config` and `dbflow-filament-config`; set `DBFLOW_AUTH_MODEL` (or defaults in config)
 4. Set `permission_checker_class` (**not** `AllowAllPermissionChecker`)
@@ -687,7 +733,7 @@ Steps 1–7 alone do **not** produce runnable approvals.
 
 ## Stable release scope
 
-`1.0.0` pairs with Core `^1.0` under the frozen integration contract.
+`1.1.0` pairs with Core `^1.1`. The `1.0.x` line remains available with Core `^1.0`.
 
 ### Included
 
@@ -698,6 +744,8 @@ Steps 1–7 alone do **not** produce runnable approvals.
 - Workflow Instance Detail page (audit timeline, optional cancel action)
 - Workflow Definition resource
 - Standard form-based workflow definition editor (optional approval `timeout.due_in` / `on_timeout`)
+- Read-only Delegations and Action Executions pages (v1.1 runtime visibility; capability-gated)
+- Assignment provenance, SLA visibility, and redacted webhook metadata on read-only surfaces
 - Runtime-disabled notice when `DBFLOW_ENABLED=false`
 - Extension contracts for auth, labels, users, assignee options, and presentation
 - Integration with Core definitions, versions, instances, tasks, assignments, and logs
@@ -714,6 +762,9 @@ Visual authoring belongs to the separate commercial `dbflowlabs/filament-pro` pa
 
 ## Further reading
 
+- [UPGRADE-1.1.md](UPGRADE-1.1.md) — Upgrade from Filament `1.0.x` to `1.1` (permissions, config, Standard vs Pro)
+- [RELEASE-NOTES-1.1.0.md](RELEASE-NOTES-1.1.0.md) — 1.1.0 release highlights
+- [docs/architecture/v1.1-runtime-visibility.md](docs/architecture/v1.1-runtime-visibility.md) — v1.1 runtime visibility boundaries
 - [docs/workflow-definitions.md](docs/workflow-definitions.md) — Standard definition resource and editor behaviour
 - [Core README](https://github.com/dbflow-labs/dbflow-core/blob/main/README.md) — Runtime API, hooks, and host checklist
 - [Core Filament integration contract](https://github.com/dbflow-labs/dbflow-core/blob/main/docs/integration/filament.md) — Cross-package contract (queries, events, `WorkflowRouteResolvable`)
@@ -728,11 +779,7 @@ composer install
 composer test
 ```
 
-Before tagging a release:
-
-```bash
-bash scripts/release-check.sh
-```
+Before tagging a release, run the same gates as [`.github/workflows/tests.yml`](.github/workflows/tests.yml) (`composer validate --strict`, `composer cs-check`, boundary `rg` scans, `composer test`).
 
 Local monorepo development may use path repositories in the **consumer application's** `composer.json` only.
 

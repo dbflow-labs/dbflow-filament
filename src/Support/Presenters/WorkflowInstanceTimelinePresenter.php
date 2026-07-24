@@ -76,6 +76,12 @@ class WorkflowInstanceTimelinePresenter
             return (string) $translated;
         }
 
+        foreach (WorkflowLogEvent::cases() as $case) {
+            if ($case->value === $event) {
+                return $case->label();
+            }
+        }
+
         return (string) __('dbflow-filament::dbflow-filament.timeline.unknown');
     }
 

@@ -31,6 +31,12 @@
                             {{ __('dbflow-filament::dbflow-filament.pages.view_instance.tasks.assigned_at') }}
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                            {{ __('dbflow-filament::dbflow-filament.pages.view_instance.tasks.due_at') }}
+                        </th>
+                        <th class="fi-ta-header-cell px-3 py-3.5 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                            {{ __('dbflow-filament::dbflow-filament.pages.view_instance.tasks.time_remaining') }}
+                        </th>
+                        <th class="fi-ta-header-cell px-3 py-3.5 text-start text-sm font-semibold text-gray-950 dark:text-white">
                             {{ __('dbflow-filament::dbflow-filament.pages.view_instance.tasks.completed_at') }}
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 text-start text-sm font-semibold text-gray-950 dark:text-white">
@@ -44,12 +50,14 @@
                             <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['node_key'] }}</td>
                             <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['status'] }}</td>
                             <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['assigned_at'] }}</td>
+                            <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['due_at'] }}</td>
+                            <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['time_remaining'] }}</td>
                             <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['completed_at'] }}</td>
                             <td class="fi-ta-cell px-3 py-4 text-sm text-gray-950 dark:text-white">{{ $task['result_comment'] }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="7" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 {{ __('dbflow-filament::dbflow-filament.pages.view_instance.tasks.empty') }}
                             </td>
                         </tr>
@@ -113,6 +121,45 @@
             :description="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.timeline_intro')"
         >
             @include('dbflow-filament::components.timeline', ['items' => $this->timelineForDisplay()])
+        </x-filament::section>
+    @endif
+
+    @if ($this->assignmentHistoryForDisplay()->isNotEmpty())
+        <x-filament::section
+            class="mt-6"
+            :heading="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.assignment_history')"
+            :description="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.assignment_history_intro')"
+        >
+            @include('dbflow-filament::components.runtime-table', [
+                'columns' => __('dbflow-filament::dbflow-filament.pages.view_instance.assignment_history'),
+                'rows' => $this->assignmentHistoryForDisplay(),
+            ])
+        </x-filament::section>
+    @endif
+
+    @if ($this->slaEventsForDisplay()->isNotEmpty())
+        <x-filament::section
+            class="mt-6"
+            :heading="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.sla_events')"
+            :description="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.sla_events_intro')"
+        >
+            @include('dbflow-filament::components.runtime-table', [
+                'columns' => __('dbflow-filament::dbflow-filament.pages.view_instance.sla_events'),
+                'rows' => $this->slaEventsForDisplay(),
+            ])
+        </x-filament::section>
+    @endif
+
+    @if ($this->actionExecutionsForDisplay()->isNotEmpty())
+        <x-filament::section
+            class="mt-6"
+            :heading="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.action_executions')"
+            :description="__('dbflow-filament::dbflow-filament.pages.view_instance.sections.action_executions_intro')"
+        >
+            @include('dbflow-filament::components.runtime-table', [
+                'columns' => $this->actionExecutionColumnsForDisplay(),
+                'rows' => $this->actionExecutionsForDisplay(),
+            ])
         </x-filament::section>
     @endif
 </x-filament-panels::page>

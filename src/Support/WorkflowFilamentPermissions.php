@@ -49,6 +49,22 @@ final class WorkflowFilamentPermissions
             'archive' => 'dbflow.definitions.archive',
             'copy' => 'dbflow.definitions.copy',
         ],
+        'delegations' => [
+            'view_any' => 'dbflow.delegations.view_any',
+        ],
+        'sla_events' => [
+            'view' => 'dbflow.sla_events.view',
+        ],
+        'action_executions' => [
+            'view_any' => 'dbflow.action_executions.view_any',
+            'view' => 'dbflow.action_executions.view',
+        ],
+        'action_attempts' => [
+            'view' => 'dbflow.action_attempts.view',
+        ],
+        'webhook_metadata' => [
+            'view' => 'dbflow.webhook_metadata.view',
+        ],
     ];
 
     /**

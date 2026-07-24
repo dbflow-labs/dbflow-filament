@@ -19,8 +19,12 @@ namespace DbflowLabs\Filament\Support;
 
 use DbflowLabs\Filament\Contracts\WorkflowableLabelResolver;
 use DbflowLabs\Filament\Pages\MyWorkflowTasks;
+use DbflowLabs\Filament\Pages\ViewWorkflowActionExecution;
 use DbflowLabs\Filament\Pages\ViewWorkflowInstance;
+use DbflowLabs\Filament\Pages\WorkflowActionExecutions;
+use DbflowLabs\Filament\Pages\WorkflowDelegations;
 use DbflowLabs\Filament\Pages\WorkflowInstances;
+use DbflowLabs\Filament\Support\RuntimeCapabilityGate;
 use Filament\Panel;
 
 final class DBFlowFilamentPanel
@@ -55,6 +59,29 @@ final class DBFlowFilamentPanel
 
             if (is_string($detailPageClass) && class_exists($detailPageClass)) {
                 $pages[] = $detailPageClass;
+            }
+        }
+
+        if ((bool) config('dbflow-filament.enable_delegations_page', true)
+            && app(RuntimeCapabilityGate::class)->delegationVisible()) {
+            $delegationsPageClass = config('dbflow-filament.workflow_delegations_page_class', WorkflowDelegations::class);
+
+            if (is_string($delegationsPageClass) && class_exists($delegationsPageClass)) {
+                $pages[] = $delegationsPageClass;
+            }
+        }
+
+        if ((bool) config('dbflow-filament.enable_action_executions_page', true)
+            && app(RuntimeCapabilityGate::class)->reliableActionVisible()) {
+            $executionsPageClass = config('dbflow-filament.workflow_action_executions_page_class', WorkflowActionExecutions::class);
+            $executionDetailPageClass = config('dbflow-filament.view_workflow_action_execution_page_class', ViewWorkflowActionExecution::class);
+
+            if (is_string($executionsPageClass) && class_exists($executionsPageClass)) {
+                $pages[] = $executionsPageClass;
+            }
+
+            if (is_string($executionDetailPageClass) && class_exists($executionDetailPageClass)) {
+                $pages[] = $executionDetailPageClass;
             }
         }
 

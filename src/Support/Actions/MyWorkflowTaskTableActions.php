@@ -21,6 +21,7 @@ use DbflowLabs\Core\Models\WorkflowTaskAssignment;
 use DbflowLabs\Core\Support\DbflowRuntime;
 use DbflowLabs\Filament\Contracts\UserAssigneeOptionsResolver;
 use DbflowLabs\Filament\Support\Actions\MyWorkflowTaskActionRunner;
+use DbflowLabs\Filament\Support\Presenters\TaskRuntimeSummaryPresenter;
 use DbflowLabs\Filament\Support\WorkflowFilamentPermissions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -31,6 +32,26 @@ use Illuminate\Support\Facades\Auth;
 
 final class MyWorkflowTaskTableActions
 {
+    public static function viewRuntime(): Action
+    {
+        return Action::make('viewTaskRuntime')
+            ->label((string) __('dbflow-filament::dbflow-filament.actions.view_runtime'))
+            ->icon('heroicon-o-information-circle')
+            ->color('gray')
+            ->visible(fn (WorkflowTaskAssignment $record): bool => WorkflowFilamentPermissions::can('tasks', 'view', $record, Auth::user()))
+            ->modalHeading((string) __('dbflow-filament::dbflow-filament.modals.runtime.heading'))
+            ->modalDescription((string) __('dbflow-filament::dbflow-filament.modals.runtime.description'))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel((string) __('dbflow-filament::dbflow-filament.actions.close'))
+            ->modalContent(function (WorkflowTaskAssignment $record): \Illuminate\Contracts\View\View {
+                $summary = app(TaskRuntimeSummaryPresenter::class)->summaryForAssignment($record);
+
+                return view('dbflow-filament::components.runtime-summary', [
+                    'rows' => $summary,
+                ]);
+            });
+    }
+
     public static function approve(): Action
     {
         return Action::make('approveTask')
@@ -219,7 +240,9 @@ final class MyWorkflowTaskTableActions
     private static function reassignTargetOptions(WorkflowTaskAssignment $assignment): array
     {
         $options = app(UserAssigneeOptionsResolver::class)->options();
-        $currentAssigneeId = (string) $assignment->assignee_user_id;
+        $currentAssigneeId = method_exists($assignment, 'effectiveAssigneeUserId')
+            ? $assignment->effectiveAssigneeUserId()
+            : (string) $assignment->assignee_user_id;
 
         return array_filter(
             $options,

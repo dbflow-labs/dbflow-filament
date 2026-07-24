@@ -12,11 +12,11 @@
 composer.local.json
 composer.integration.json
 composer.integration.lock
+composer.lock.bak
 
-/lang/zh_CN/
-
-docs/
+/scripts/
 
 .DS_Store
 Thumbs.db
 *.log
+/build

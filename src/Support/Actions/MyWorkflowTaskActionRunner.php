@@ -87,7 +87,13 @@ final class MyWorkflowTaskActionRunner
         }
 
         try {
-            DBFlow::reassign($task, $actor, $toUserId, $comment);
+            $reassignParameters = (new \ReflectionMethod(DBFlow::class, 'reassign'))->getNumberOfParameters();
+
+            if ($reassignParameters >= 6) {
+                DBFlow::reassign($task, $actor, $toUserId, $comment, null, $assignment->getKey());
+            } else {
+                DBFlow::reassign($task, $actor, $toUserId, $comment);
+            }
 
             return WorkflowTaskActionResult::success();
         } catch (TaskNotPendingException|UserCannotReassignTaskException) {
@@ -107,7 +113,11 @@ final class MyWorkflowTaskActionRunner
             return false;
         }
 
-        if ((string) $assignment->assignee_user_id !== (string) $user->getKey()) {
+        if (method_exists($assignment, 'isActionableBy')) {
+            if (! $assignment->isActionableBy((string) $user->getKey())) {
+                return false;
+            }
+        } elseif ((string) $assignment->assignee_user_id !== (string) $user->getKey()) {
             return false;
         }
 

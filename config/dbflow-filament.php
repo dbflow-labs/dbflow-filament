@@ -87,6 +87,22 @@ return [
             'archive' => 'dbflow.definitions.archive',
             'copy' => 'dbflow.definitions.copy',
         ],
+        'delegations' => [
+            'view_any' => 'dbflow.delegations.view_any',
+        ],
+        'sla_events' => [
+            'view' => 'dbflow.sla_events.view',
+        ],
+        'action_executions' => [
+            'view_any' => 'dbflow.action_executions.view_any',
+            'view' => 'dbflow.action_executions.view',
+        ],
+        'action_attempts' => [
+            'view' => 'dbflow.action_attempts.view',
+        ],
+        'webhook_metadata' => [
+            'view' => 'dbflow.webhook_metadata.view',
+        ],
         /*
         | Backward-compatible flat keys retained for hosts that configured
         | permissions before the nested ability map was introduced.
@@ -111,6 +127,20 @@ return [
     'view_workflow_instance_page_class' => \DbflowLabs\Filament\Pages\ViewWorkflowInstance::class,
 
     'enable_logs_timeline' => env('DBFLOW_FILAMENT_LOGS_TIMELINE', true),
+
+    'enable_delegations_page' => env('DBFLOW_FILAMENT_DELEGATIONS', true),
+
+    'workflow_delegations_page_class' => \DbflowLabs\Filament\Pages\WorkflowDelegations::class,
+
+    'enable_action_executions_page' => env('DBFLOW_FILAMENT_ACTION_EXECUTIONS', true),
+
+    'workflow_action_executions_page_class' => \DbflowLabs\Filament\Pages\WorkflowActionExecutions::class,
+
+    'view_workflow_action_execution_page_class' => \DbflowLabs\Filament\Pages\ViewWorkflowActionExecution::class,
+
+    'due_soon_hours' => (int) env('DBFLOW_FILAMENT_DUE_SOON_HOURS', 24),
+
+    'runtime_detail_limit' => (int) env('DBFLOW_FILAMENT_RUNTIME_DETAIL_LIMIT', 100),
 
     'enable_workflow_definition_resource' => env('DBFLOW_FILAMENT_DEFINITIONS', true),
 
@@ -137,6 +167,8 @@ return [
         'my_tasks' => 10,
         'workflow_instances' => 20,
         'workflow_definitions' => 25,
+        'delegations' => 30,
+        'action_executions' => 35,
     ],
 
     /*
@@ -240,6 +272,13 @@ return [
     */
 
     'date_time_format' => 'Y-m-d H:i:s',
+
+    /*
+    | Display timezone for custom (non-Filament Table) datetime formatting.
+    | Stored UTC values are never mutated; null falls back to app.timezone.
+    */
+
+    'display_timezone' => env('DBFLOW_FILAMENT_DISPLAY_TIMEZONE'),
 
     'open_workflowable_links_in_new_tab' => env('DBFLOW_FILAMENT_OPEN_WORKFLOWABLE_IN_NEW_TAB', false),
 

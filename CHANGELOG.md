@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.1.0] - 2026-07-23
+
+### Added
+
+- Requires `dbflowlabs/core` `^1.1`.
+- Assignment provenance display on My Workflow Tasks and View Workflow Instance.
+- Read-only Delegations page when delegation capability is enabled.
+- Read-only Action Executions page when reliable-action capability is enabled.
+- SLA visibility fields and timeline presenters for v1.1 SLA tasks.
+- Webhook metadata redaction in read-only surfaces (no plaintext secrets).
+- Permissions: `dbflow.delegations.view_any`, `dbflow.action_executions.view`, and related capability gates.
+- Standard page substitution hooks for Pro (`workflow_delegations_page_class`, `view_workflow_action_execution_page_class`).
+- Built-in UI translations for `en`, `zh_CN`, `zh_TW`, `ja`, `de`, `es`, `fr`, and `pt_BR`.
+
+### Changed
+
+- Task inbox queries tolerate legacy rows with null provenance (falls back to direct assignment).
+- Timeline entries for reassignment, SLA, and action execution events.
+
+### Upgrade notes
+
+- From `1.0.x`: `composer require dbflowlabs/filament:^1.1 dbflowlabs/core:^1.1`, migrate, clear caches.
+- See [UPGRADE-1.1.md](UPGRADE-1.1.md) for new permissions, configuration, and Standard vs Pro boundaries.
+- No Pro package required; Pro extends via config hooks only.
+
 ## [1.0.0] - 2026-07-07
 
 ### Changed
@@ -91,4 +118,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README `DBFLOW_ENABLED` table aligned with Core 0.3.1 definition-management contract.
 - `docs/release-readiness.md` core constraint updated to `^0.3.0-alpha.1`.
 
+[Unreleased]: https://github.com/dbflow-labs/dbflow-filament/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0-rc.2...1.0.0
+[1.0.0-rc.2]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0-rc.1...1.0.0-rc.2
+[1.0.0-rc.1]: https://github.com/dbflow-labs/dbflow-filament/compare/0.9.0-beta.1...1.0.0-rc.1
+[0.9.0-beta.1]: https://github.com/dbflow-labs/dbflow-filament/compare/0.3.1-alpha.1...0.9.0-beta.1
 [0.3.1-alpha.1]: https://github.com/dbflow-labs/dbflow-filament/compare/0.1.0-alpha.1...0.3.1-alpha.1

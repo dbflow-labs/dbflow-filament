@@ -55,7 +55,9 @@ final class PackageBoundaryTest extends TestCase
         $violations = [];
 
         foreach ($this->packagePhpFiles() as $file) {
-            if (str_contains(str_replace('\\', '/', $file), '/lang/zh_CN/')) {
+            $normalizedPath = str_replace('\\', '/', $file);
+
+            if (preg_match('#/lang/(?!en/)#', $normalizedPath) === 1) {
                 continue;
             }
 

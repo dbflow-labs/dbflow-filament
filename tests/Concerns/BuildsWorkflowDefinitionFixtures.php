@@ -30,17 +30,9 @@ trait BuildsWorkflowDefinitionFixtures
         $validator = new WorkflowDefinitionValidator;
         $definition = MinimalWorkflowDefinitionFactory::withDefaultApprovalStep(
             MinimalWorkflowDefinitionFactory::forMetadata($key, $name),
+            assigneeType: 'user',
+            assigneeValue: '1',
         );
-
-        $nodes = $definition['nodes'] ?? [];
-        foreach ($nodes as $index => $node) {
-            if (($node['type'] ?? null) === 'approval') {
-                $nodes[$index]['config']['assignees']['type'] = 'permission';
-                $nodes[$index]['config']['assignees']['value'] = 'dbflow.definitions.view';
-            }
-        }
-
-        $definition['nodes'] = $nodes;
 
         return (new CreateWorkflowDraft($validator))->handle($definition);
     }

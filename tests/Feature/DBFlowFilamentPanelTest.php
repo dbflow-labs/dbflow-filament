@@ -48,6 +48,8 @@ final class DBFlowFilamentPanelTest extends TestCase
             'dbflow-filament.enable_my_tasks_page' => false,
             'dbflow-filament.enable_workflow_instances_page' => false,
             'dbflow-filament.enable_workflow_definition_resource' => false,
+            'dbflow-filament.enable_delegations_page' => false,
+            'dbflow-filament.enable_action_executions_page' => false,
         ]);
 
         $panel = Panel::make()->id('test');

@@ -103,10 +103,11 @@ final class MyWorkflowTasksPageTest extends TestCase
 
         $actions = $method->invoke($page);
 
-        $this->assertCount(3, $actions);
-        $this->assertSame('approveTask', $actions[0]->getName());
-        $this->assertSame('rejectTask', $actions[1]->getName());
-        $this->assertSame('reassignTask', $actions[2]->getName());
+        $this->assertCount(4, $actions);
+        $this->assertSame('viewTaskRuntime', $actions[0]->getName());
+        $this->assertSame('approveTask', $actions[1]->getName());
+        $this->assertSame('rejectTask', $actions[2]->getName());
+        $this->assertSame('reassignTask', $actions[3]->getName());
     }
 
     #[Test]
