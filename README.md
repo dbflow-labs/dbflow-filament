@@ -13,7 +13,7 @@
 
 DBFlow Filament adds workflow tasks, workflow instances, audit timelines, and form-based workflow definition management to Laravel admin panels built with [Filament](https://filamentphp.com/).
 
-This package is the **standard UI layer** for [`dbflowlabs/core`](https://github.com/dbflow-labs/dbflow-core). It intentionally ships read-only runtime surfaces and form-based definition editing. Visual workflow builders, drag-and-drop canvases, and advanced authoring experiences live in the separate commercial `dbflowlabs/filament-pro` package.
+This package is the **standard UI layer** for [`dbflowlabs/core`](https://github.com/dbflow-labs/dbflow-core). It intentionally ships read-only runtime surfaces and form-based definition editing. Visual workflow builders, canvas-based authoring UIs, and advanced diagram editing live in the separate commercial `dbflowlabs/filament-pro` package.
 
 > [!IMPORTANT]
 > **Filament UI is only half of an integration.** Seeing navigation and pages does **not** mean approvals will run. You also need Core runtime setup: migrations, user resolution, workflow definitions (code or UI), assignee resolvers, and host business triggers (`DBFlow::start()`). See [Quick start](#quick-start) and [End-to-end integration checklist](#end-to-end-integration-checklist).
