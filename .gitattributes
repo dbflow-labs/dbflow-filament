@@ -1,1 +1,16 @@
+# Line endings
 *.sh text eol=lf
+
+# Exclude development-only paths from Composer and GitHub source archives.
+# composer.lock remains tracked in Git but is omitted from exported archives.
+/.github export-ignore
+/tests export-ignore
+/docs export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/phpunit.xml export-ignore
+/composer.lock export-ignore
+/composer.local.json.dist export-ignore
+/RELEASE-NOTES-*.md export-ignore
+/UPGRADE-*.md export-ignore

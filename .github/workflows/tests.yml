@@ -11,6 +11,77 @@ on:
       - development
 
 jobs:
+  release-archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Validate release archive contents
+        run: |
+          set -euo pipefail
+
+          ARCHIVE="/tmp/dbflow-filament-release.tar"
+          FILELIST="/tmp/dbflow-filament-release-files.txt"
+
+          git archive --format=tar HEAD > "$ARCHIVE"
+          tar -tf "$ARCHIVE" > "$FILELIST"
+
+          FAILED=0
+
+          check_forbidden() {
+            local pattern="$1"
+            local label="$2"
+            if grep -qE "$pattern" "$FILELIST"; then
+              echo "ERROR: forbidden path present in release archive: $label"
+              grep -E "$pattern" "$FILELIST" | head -20
+              FAILED=1
+            fi
+          }
+
+          check_required() {
+            local pattern="$1"
+            local label="$2"
+            if ! grep -qE "$pattern" "$FILELIST"; then
+              echo "ERROR: required path missing from release archive: $label"
+              FAILED=1
+            fi
+          }
+
+          check_forbidden '^composer\.lock$' 'composer.lock'
+          check_forbidden '^\.github/' '.github/'
+          check_forbidden '^tests/' 'tests/'
+          check_forbidden '^docs/' 'docs/'
+          check_forbidden '^phpunit\.xml$' 'phpunit.xml'
+          check_forbidden '^\.php-cs-fixer\.dist\.php$' '.php-cs-fixer.dist.php'
+          check_forbidden '^\.gitattributes$' '.gitattributes'
+          check_forbidden '^\.gitignore$' '.gitignore'
+          check_forbidden '^composer\.local\.json\.dist$' 'composer.local.json.dist'
+          check_forbidden '^RELEASE-NOTES-' 'RELEASE-NOTES-*.md'
+          check_forbidden '^UPGRADE-' 'UPGRADE-*.md'
+
+          check_required '^composer\.json$' 'composer.json'
+          check_required '^README\.md$' 'README.md'
+          check_required '^LICENSE$' 'LICENSE'
+          check_required '^CHANGELOG\.md$' 'CHANGELOG.md'
+          check_required '^src/' 'src/'
+          check_required '^config/' 'config/'
+          check_required '^lang/' 'lang/'
+          check_required '^resources/' 'resources/'
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Release archive validation failed."
+            echo "Archive file count: $(wc -l < "$FILELIST")"
+            exit 1
+          fi
+
+          echo "Release archive validation passed."
+          echo "Archive file count: $(wc -l < "$FILELIST")"
+
   tests:
     runs-on: ubuntu-latest
     permissions:
@@ -26,10 +97,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: sqlite, mbstring, xml, dom, json
@@ -51,7 +122,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json', 'composer.lock') }}
@@ -60,6 +131,9 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked --no-interaction
 
       - name: Run PHP CS Fixer check
         run: composer cs-check

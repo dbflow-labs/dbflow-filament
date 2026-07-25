@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Pinned external GitHub Actions to immutable full commit SHAs.
+- Added Composer dependency security auditing to CI.
+- Added a public vulnerability reporting policy.
+- Refreshed the development lock file to use a non-vulnerable Guzzle release.
+
+### Changed
+
+- Excluded development-only files from exported package archives.
+- Added automated validation of release archive contents.
+- Added Dependabot maintenance for Composer and GitHub Actions.
+
 ## [1.1.0] - 2026-07-23
 
 ### Added
