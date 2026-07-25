@@ -7,16 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-07-25
+
 ### Security
 
 - Pinned external GitHub Actions to immutable full commit SHAs.
 - Added Composer dependency security auditing to CI.
 - Added a public vulnerability reporting policy.
-- Refreshed the development lock file to use a non-vulnerable Guzzle release.
+- Refreshed the development lock file to use non-vulnerable Guzzle releases.
 
 ### Changed
 
-- Excluded development-only files from exported package archives.
+- Excluded `composer.lock` and other development-only files from exported package archives.
 - Added automated validation of release archive contents.
 - Added Dependabot maintenance for Composer and GitHub Actions.
 
@@ -131,7 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README `DBFLOW_ENABLED` table aligned with Core 0.3.1 definition-management contract.
 - `docs/release-readiness.md` core constraint updated to `^0.3.0-alpha.1`.
 
-[Unreleased]: https://github.com/dbflow-labs/dbflow-filament/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/dbflow-labs/dbflow-filament/compare/1.1.1...HEAD
+[1.1.1]: https://github.com/dbflow-labs/dbflow-filament/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0-rc.2...1.0.0
 [1.0.0-rc.2]: https://github.com/dbflow-labs/dbflow-filament/compare/1.0.0-rc.1...1.0.0-rc.2
